@@ -1,25 +1,29 @@
-# Demersseman — 完全版修正作業の確認資料
+# ドゥメルスマン「アンダンテとボレロ」ピアノ伴奏・全曲版
 
-**修正済みの全曲伴奏は未完成です。** 原典14ページは取得済みですが、全音符の転記・校合は未完了です。
-未確認の演奏データを完成版として音源化していません。
+1866年 Adolphe Sax A.S.164／IMSLP #567628 の総譜全6ページを採譜した、B♭テナーサックス用のピアノ伴奏です。冒頭の弱起から最終二重線まで収録し、サックスの音は含みません。
 
-## 最新の原典確認・不一致の報告
+## まず音源を保存する
 
-- [確認報告を読む](downloads/Demersseman_revision_report.md)
-- [原典・検査用区画一覧・未検証OMRデータのZIPを保存](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/Demersseman_revision_audit.zip)
+リンクを開いて保存してください。ZIPを開いたときの「プレビュー未対応」は再生画面ではありません。保存・展開して、中のMP3またはWAVを開いてください。
 
-ZIPには完成音源は含まれません。OMRのMusicXMLは音程・音価・構成に誤りを含み、演奏用には使えません。
-以前の「Allegretto＝5/4」という報告は誤読で、原譜は3/4です。
+|版|MP3だけ保存|WAV・MP3・MIDI・MusicXMLのZIP|
+|---|---|---|
+|A 表現・速度変化あり（約3分06秒）|[MP3](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/Demersseman_original_performance.mp3)|[A 全曲セット](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/Demersseman_full_A.zip)|
+|B 各区間一定テンポ（約3分06秒）|[MP3](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/Demersseman_practice_stable.mp3)|[B 全曲セット](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/Demersseman_full_B.zip)|
+|C Bの80％テンポ（約3分52秒）|[MP3](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/Demersseman_practice_80percent.mp3)|[C 全曲セット](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/Demersseman_full_C.zip)|
 
-## 旧試作品（校合未完了・全曲ではありません）
+- [3版まとめて保存：MP3・MIDI・MusicXML・報告](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/Demersseman_full_MP3_MIDI_XML.zip)
+- [採譜・小節検査・テンポ時刻・スクリプトの検証資料](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/Demersseman_full_knowledge.zip)
+- [制作・検証報告を読む](downloads/Demersseman_full_report.md)
 
-- [旧抜粋ZIP](downloads/Demersseman_excerpt.zip)
-- [旧抜粋MP3（約10秒）](downloads/Demersseman_excerpt.mp3)
+WAVは44.1kHz／24bit、MP3は320kbps。全WAVをまとめるとGitHubの1ファイル上限を超えるため、版ごとの独立ZIPにしています。分割アーカイブの結合操作は不要です。
 
-弱起と冒頭3小節だけです。旧MIDIには8分音符を約8%短縮した19音があり、MusicXMLの音価に一致しません。
-生成スクリプトは修正・検査済みですが、この旧ZIP・MP3は再生成していません。
-旧ZIP内の確認報告を、最新の検証結果として扱わないでください。
+## 確認範囲と演奏設定
 
-旧音源はSalamander Grand Piano / Alexander Holm、SF2化 Roberto / FreePats（CC BY 3.0）です。
+原譜管理0–95の96区間（弱起・自由カデンツァを含む）、左右手の音価検査192件。採譜・独立照合で見つかった訂正を反映。MusicXML音符2574、タイ結合後MIDI打鍵2561、音程・開始位置・長さの変換一致と全音声デコードを検査。
 
-このリポジトリのファイルは、本番用の完成伴奏としては使用できません。
+原譜に数値テンポはありません。承認された制作値：Andante付点四分50、Allegretto四分100、Boléro四分120、Presto四分160。カデンツァは固定待機、トリルの速さは演奏上の選択です。詳細な秒数・解釈・検査範囲は報告に記載しています。歴史的演奏や数値テンポの唯一の再現を保証するものではありません。
+
+Salamander Grand Piano：Alexander Holm／FreePats Roberto、CC BY 3.0。ピアノのみ、リバーブ・コーラスなし。
+
+以前のexcerpt・revision_auditファイルは旧試作品／途中報告です。今回の全曲版はファイル名に `full` が付いたセットを使用してください。

@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Demersseman_full_A.zip",
+    "bytes": 49236946,
+    "sha256": "5e8f4802a82b69aaa5b504f868d8ed8fe3896a6b76626955d339513e4611188b"
+  },
+  {
+    "name": "Demersseman_full_B.zip",
+    "bytes": 49417161,
+    "sha256": "1fb9d551d7febcf4222413b665f79f4841239bc853b211e86cc0f1de77e0d960"
+  },
+  {
+    "name": "Demersseman_full_C.zip",
+    "bytes": 61586499,
+    "sha256": "cf1fdfdd792c29802394de84283a6821506f2049801162062ecce1f935716706"
+  },
+  {
+    "name": "Demersseman_full_MP3_MIDI_XML.zip",
+    "bytes": 22589001,
+    "sha256": "570c24c3f759a31552a6e87b1cb58c92e4f54628272ede1ba444df12c3d136b1"
+  },
+  {
+    "name": "Demersseman_full_knowledge.zip",
+    "bytes": 338856,
+    "sha256": "d7271b91cb0908e9fd48b36e0340d06d62cfd58a68b28870476eefb963061e3e"
+  }
+]
