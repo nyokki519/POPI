@@ -1,0 +1,41 @@
+{
+  "run_id": 38032710405,
+  "url": "https://github.com/nyokki519/POPI/actions/runs/38032710405",
+  "commit": "d1d5c5b73c5aafca00d90894688a8d1311433bda",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "ios-extension-build",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Swift comment core tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "iOS Broadcast Upload Extension API validation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "scope": "Apple iOS simulator SDK: application-extension typecheck and dylib link; NOT real iPhone installation, ReplayKit broadcast runtime, audible speech or GRAVITY interoperability"
+}

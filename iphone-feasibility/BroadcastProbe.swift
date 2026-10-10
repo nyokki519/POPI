@@ -1,5 +1,6 @@
 // Experimental Broadcast Upload Extension handler, not an installable app.
-// iOS16+, Apple SDK and signed device build required. Native APIs UNTESTED here.
+// iOS16+: Apple SDK extension typecheck + simulator library link passed in CI.
+// Signed iPhone installation and native runtime/audio behavior remain UNTESTED.
 // Set RPBroadcastProcessMode=RPBroadcastProcessModeSampleBuffer in extension plist.
 // No networking, persisted screen images, or logging of recognized text.
 import ReplayKit
