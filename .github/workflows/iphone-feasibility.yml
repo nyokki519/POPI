@@ -36,9 +36,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          command -v xcodegen || brew install xcodegen
           cd gravity-iphone
-          xcodegen generate
+          python3 scripts/generate-project.py
           xcodebuild -project GravityReader.xcodeproj -scheme GravityReader -sdk iphonesimulator -configuration Debug -derivedDataPath "$RUNNER_TEMP/GravityBuild" CODE_SIGNING_ALLOWED=NO build
           APP="$RUNNER_TEMP/GravityBuild/Build/Products/Debug-iphonesimulator/GravityReader.app"
           test -f "$APP/GravityReader"
