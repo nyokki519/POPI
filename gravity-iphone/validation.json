@@ -1,0 +1,48 @@
+{
+  "source_commit": "241270df32ad0847687bc45143df9552aead80af",
+  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38033684397",
+  "conclusion": "success",
+  "steps": [
+    {
+      "name": "Set up job",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Swift comment core tests",
+      "conclusion": "success"
+    },
+    {
+      "name": "iOS Broadcast Upload Extension API validation",
+      "conclusion": "success"
+    },
+    {
+      "name": "Build iPhone app and ReplayKit upload extension",
+      "conclusion": "success"
+    },
+    {
+      "name": "Build unsigned iPhone device binaries",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/checkout@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "conclusion": "success"
+    }
+  ],
+  "tested": "Pure Swift core tests, Apple SDK app+extension simulator build, unsigned iPhone device build",
+  "not_tested": [
+    "Signed iPhone installation",
+    "GRAVITY live OCR",
+    "Audible background TTS",
+    "GRAVITY voice-room audio compatibility",
+    "Real-device memory limits"
+  ],
+  "review": "Fresh review completed; system broadcast picker and audio startup failure handling corrected"
+}
