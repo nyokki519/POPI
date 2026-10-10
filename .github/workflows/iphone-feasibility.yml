@@ -43,3 +43,14 @@ jobs:
           test -f "$APP/GravityReader"
           test -f "$APP/PlugIns/Upload.appex/Upload"
           plutil -lint "$APP/Info.plist" "$APP/PlugIns/Upload.appex/Info.plist"
+      - name: Build unsigned iPhone device binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd gravity-iphone
+          xcodebuild -project GravityReader.xcodeproj -scheme GravityReader -sdk iphoneos -destination 'generic/platform=iOS' -configuration Release -derivedDataPath "$RUNNER_TEMP/GravityDevice" CODE_SIGNING_ALLOWED=NO build
+          APP="$RUNNER_TEMP/GravityDevice/Build/Products/Release-iphoneos/GravityReader.app"
+          test -f "$APP/GravityReader"
+          test -f "$APP/PlugIns/Upload.appex/Upload"
+          xcrun lipo -archs "$APP/GravityReader"
+          xcrun lipo -archs "$APP/PlugIns/Upload.appex/Upload"
