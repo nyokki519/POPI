@@ -5,15 +5,15 @@ import hashlib,json,plistlib
 root=Path(__file__).resolve().parents[1]
 objects={}
 def ident(name):return hashlib.sha256(name.encode()).hexdigest()[:24].upper()
-def obj(name,isa,**fields):
-    key=ident(name);objects[key]={'isa':isa,**fields};return key
+def obj(keyname,isa,**fields):
+    key=ident(keyname);objects[key]={'isa':isa,**fields};return key
 
 def configlist(name,base):
     configs=[]
     for mode in ('Debug','Release'):
         configs.append(obj(name+mode,'XCBuildConfiguration',name=mode,buildSettings={**base,'SWIFT_OPTIMIZATION_LEVEL':'-Onone' if mode=='Debug' else '-O'}))
     return obj(name+'configs','XCConfigurationList',buildConfigurations=configs,defaultConfigurationIsVisible='0',defaultConfigurationName='Release')
-products=[];targets=[];targetids={name:ident(name+'target') for name in ('GravityReader','Setup','Upload')}
+products=[];targets=[];targetids={name:ident(name+'target') for name in ('GravityReader','Upload')}
 fileids={}
 for p in sorted((root/'Sources').rglob('*.swift')):
     rel=str(p.relative_to(root));fileids[rel]=obj(rel,'PBXFileReference',lastKnownFileType='sourcecode.swift',path=rel,sourceTree='<group>')
@@ -35,7 +35,7 @@ for name in targetids:
     deps=[]
     if app:
         embeds=[]
-        for ext in ('Setup','Upload'):
+        for ext in ('Upload',):
             proxy=obj(ext+'proxy','PBXContainerItemProxy',containerPortal=ident('project'),proxyType='1',remoteGlobalIDString=targetids[ext],remoteInfo=ext)
             deps.append(obj(ext+'dep','PBXTargetDependency',target=targetids[ext],targetProxy=proxy))
             embeds.append(obj(ext+'embed','PBXBuildFile',fileRef=ident(ext+'product'),settings={'ATTRIBUTES':['RemoveHeadersOnCopy']}))

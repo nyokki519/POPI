@@ -32,7 +32,7 @@ jobs:
             -application-extension -emit-library iphone-feasibility/BroadcastProbe.swift \
             -o "$RUNNER_TEMP/BroadcastProbe.dylib"
           echo 'API typecheck and simulator library link passed; NOT a real iPhone/GRAVITY playback test.'
-      - name: Build iPhone app and both ReplayKit extensions
+      - name: Build iPhone app and ReplayKit upload extension
         shell: bash
         run: |
           set -euo pipefail
@@ -41,6 +41,5 @@ jobs:
           xcodebuild -project GravityReader.xcodeproj -scheme GravityReader -sdk iphonesimulator -configuration Debug -derivedDataPath "$RUNNER_TEMP/GravityBuild" CODE_SIGNING_ALLOWED=NO build
           APP="$RUNNER_TEMP/GravityBuild/Build/Products/Debug-iphonesimulator/GravityReader.app"
           test -f "$APP/GravityReader"
-          test -f "$APP/PlugIns/Setup.appex/Setup"
           test -f "$APP/PlugIns/Upload.appex/Upload"
-          plutil -lint "$APP/Info.plist" "$APP/PlugIns/Setup.appex/Info.plist" "$APP/PlugIns/Upload.appex/Info.plist"
+          plutil -lint "$APP/Info.plist" "$APP/PlugIns/Upload.appex/Info.plist"

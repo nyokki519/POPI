@@ -12,8 +12,11 @@ final class SampleHandler:RPBroadcastSampleHandler {
     override func broadcastStarted(withSetupInfo setupInfo:[String:NSObject]?) {
         configuration=ReaderConfiguration(setupInfo);detector.reset();paused=false;lastOCR=0;failures=0
         let rate=Float(configuration.rate)
-        DispatchQueue.main.async { [weak self] in self?.speaker.start(rate:rate) }
+        DispatchQueue.main.async { [weak self] in self?.startSpeaker(rate:rate) }
         NSLog("GravityReader started; images and recognized text are not stored or uploaded")
+    }
+    private func startSpeaker(rate:Float) {
+        do {try speaker.start(rate:rate)} catch {finishBroadcastWithError(NSError(domain:"GravityReader",code:3,userInfo:[NSLocalizedDescriptionKey:"読み上げ用音声を開始できませんでした。GRAVITYの音声ルームを一度閉じて、画面配信を再開始してください。" ]))}
     }
     override func processSampleBuffer(_ sampleBuffer:CMSampleBuffer,with type:RPSampleBufferType) {
         guard type == .video,!paused else {return}
@@ -45,7 +48,7 @@ final class SampleHandler:RPBroadcastSampleHandler {
         }
     }
     override func broadcastPaused() {paused=true;DispatchQueue.main.async { [weak self] in self?.speaker.stop() }}
-    override func broadcastResumed() {paused=false;detector.reset();lastOCR=0;let rate=Float(configuration.rate);DispatchQueue.main.async { [weak self] in self?.speaker.start(rate:rate) }}
+    override func broadcastResumed() {paused=false;detector.reset();lastOCR=0;let rate=Float(configuration.rate);DispatchQueue.main.async { [weak self] in self?.startSpeaker(rate:rate) }}
     override func broadcastFinished() {paused=true;DispatchQueue.main.async { [weak self] in self?.speaker.stop() };NSLog("GravityReader finished")}
 }
 // All speaker state is confined to the main queue. Serial ReplayKit callbacks
@@ -55,12 +58,10 @@ private final class PrivateSpeaker:NSObject,AVSpeechSynthesizerDelegate {
     private var queue=FreshSpeechQueue(capacity:6,maxAge:8,maxCharacters:120)
     private var active=false
     private var rate:Float=0.5
-    func start(rate:Float) {
+    func start(rate:Float) throws {
         stop();self.rate=rate;synth.delegate=self
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback,options:[.mixWithOthers])
-            try AVAudioSession.sharedInstance().setActive(true);active=true
-        } catch {NSLog("GravityReader audio session activation failed: %@",error.localizedDescription)}
+        try AVAudioSession.sharedInstance().setCategory(.playback,options:[.mixWithOthers])
+        try AVAudioSession.sharedInstance().setActive(true);active=true
     }
     func enqueue(_ comments:[String],time:Double) {
         guard active else {return}
