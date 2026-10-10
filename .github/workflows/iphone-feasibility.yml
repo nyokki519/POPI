@@ -18,7 +18,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Swift comment core tests
-        run: bash gravity-reader/scripts/test-core.sh
+        run: bash gravity-iphone/scripts/test-core.sh
       - name: iOS Broadcast Upload Extension API validation
         shell: bash
         run: |
