@@ -1,3 +1,11 @@
+# GRAVITY コメント読み上げ（Mac用初版）
+
+[起動ランチャー付きZIPを保存](https://github.com/nyokki519/POPI/raw/refs/heads/main/downloads/GRAVITY_Reader_Mac_Source_v0.1.zip) — 展開して「起動.command」を開きます。macOS14以降・初回はApple Command Line Toolsが必要です。
+
+[操作手順と確認範囲](gravity-reader/README.md)。コメント処理30テストと模擬再生は検証済み。Mac上のビルド・画面OCR・音声出力、iPhone／ROOMへの送信は実機確認待ちです。ROOMは音声出力先の選択であり、iPhoneに自動送信する機能ではありません。
+
+---
+
 # ドゥメルスマン「アンダンテとボレロ」ピアノ伴奏・全曲版
 
 1866年 Adolphe Sax A.S.164／IMSLP #567628 の総譜全6ページを採譜した、B♭テナーサックス用のピアノ伴奏です。冒頭の弱起から最終二重線まで収録し、サックスの音は含みません。

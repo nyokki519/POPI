@@ -1,0 +1,43 @@
+PASS startup screen is baseline only
+PASS new comment waits for confirmation
+PASS confirmed appended comment
+PASS same visible screen does not replay
+PASS scroll preserves overlap
+PASS new repeated occurrence speaks
+PASS no overlap rebases without replay
+PASS reset prevents backlog replay
+PASS transient OCR does not speak
+PASS system events excluded
+PASS Japanese normal comment is retained
+PASS low confidence filtered
+PASS width and whitespace normalization
+PASS single OCR typo does not become new comment
+PASS queue capacity drops oldest
+PASS queue truncates long comment
+PASS queue retains chronological order
+PASS stale speech is discarded
+PASS age boundary is accepted
+PASS clear cancels pending speech
+PASS custom ignore phrase
+PASS rapid first appearance waits
+PASS rapid incoming comments still confirm C
+PASS rapid incoming comments still confirm D
+PASS unresolved prefix waits instead of being swallowed
+PASS corrected prefix and later comment both survive
+PASS new prepare invalidates old request
+PASS new prepare can commit
+PASS cancel invalidates in-flight preparation
+PASS densely spaced rows preserve top to bottom order
+RESULT 30/30 passed
+{
+  "core_elapsed_ms" : 1.7589640046935529,
+  "frames" : 24,
+  "received" : [
+    "次郎:読み上げのテストです",
+    "花子:日本語のコメントです",
+    "太郎:同じ文章も追加できます",
+    "太郎:同じ文章も追加できます"
+  ],
+  "scope" : "Simulated OCR rows -> real Swift detector -> real queue; no native screen OCR or speech hardware",
+  "status" : "PASS"
+}
