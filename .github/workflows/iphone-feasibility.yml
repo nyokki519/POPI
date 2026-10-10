@@ -1,0 +1,33 @@
+name: iPhone ReplayKit feasibility
+on:
+  push:
+    paths:
+      - 'iphone-feasibility/**'
+      - 'gravity-reader/Sources/CommentCore.swift'
+      - '.github/workflows/iphone-feasibility.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios-extension-build:
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Swift comment core tests
+        run: bash gravity-reader/scripts/test-core.sh
+      - name: iOS Broadcast Upload Extension API validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_PATH="$(xcrun --sdk iphonesimulator --show-sdk-path)"
+          xcrun swiftc --version
+          xcrun --sdk iphonesimulator --show-sdk-version
+          xcrun swiftc -swift-version 5 -sdk "$SDK_PATH" -target arm64-apple-ios16.0-simulator \
+            -application-extension -typecheck iphone-feasibility/BroadcastProbe.swift
+          xcrun swiftc -swift-version 5 -sdk "$SDK_PATH" -target arm64-apple-ios16.0-simulator \
+            -application-extension -emit-library iphone-feasibility/BroadcastProbe.swift \
+            -o "$RUNNER_TEMP/BroadcastProbe.dylib"
+          echo 'API typecheck and simulator library link passed; NOT a real iPhone/GRAVITY playback test.'

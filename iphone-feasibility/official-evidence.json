@@ -1,0 +1,895 @@
+[
+  {
+    "document": "app-extension",
+    "excerpt": [
+      "tes the host app’s request by immediately performing the user’s task or, if necessary, initiating a background process to perform it. The host app tears down the extension’s view and the user returns to their previous context within the host app. When the extension’s task is finished, whether immediately or later, a result may b",
+      "ult may be returned to the host app. Shortly after the app extension performs its task (or starts a background session to perform it), the system terminates the extension, as shown in step 4. How an App Extension Communicates An app extension communicates primarily with its host app, and does so in terms reminiscent of transacti",
+      "lified view of the relationship between a running extension, the host app that launched it, and the containing app. Figure 2-2 An app extension communicates directly only with the host app There is no direct communication between an app extension and its containing app; typically, the containing app isn’t even running while a contai",
+      "s directly only with the host app There is no direct communication between an app extension and its containing app; typically, the containing app isn’t even running while a contained extension is running. An app extension’s containing app and the host app don’t communicate at all. In a typical request/response transaction, the syste",
+      "pp There is no direct communication between an app extension and its containing app; typically, the containing app isn’t even running while a contained extension is running. An app extension’s containing app and the host app don’t communicate at all. In a typical request/response transaction, the system opens an app extension on beh",
+      "y, the containing app isn’t even running while a contained extension is running. An app extension’s containing app and the host app don’t communicate at all. In a typical request/response transaction, the system opens an app extension on behalf of a host app, conveying data in an extension context provided by the host. The extension"
+    ]
+  },
+  {
+    "document": "audio-session",
+    "title": "mixWithOthers",
+    "abstract": [
+      {
+        "text": "An option that indicates whether audio from this session mixes with audio from active sessions in other audio apps.",
+        "type": "text"
+      }
+    ],
+    "sections": [
+      {
+        "declarations": [
+          {
+            "languages": [
+              "swift"
+            ],
+            "platforms": [
+              "iOS",
+              "iPadOS",
+              "Mac Catalyst",
+              "tvOS",
+              "visionOS",
+              "watchOS"
+            ],
+            "tokens": [
+              {
+                "kind": "keyword",
+                "text": "static"
+              },
+              {
+                "kind": "text",
+                "text": " "
+              },
+              {
+                "kind": "keyword",
+                "text": "var"
+              },
+              {
+                "kind": "text",
+                "text": " "
+              },
+              {
+                "kind": "identifier",
+                "text": "mixWithOthers"
+              },
+              {
+                "kind": "text",
+                "text": ": "
+              },
+              {
+                "identifier": "doc://com.apple.avfaudio/documentation/AVFAudio/AVAudioSession",
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:objc(cs)AVAudioSession",
+                "text": "AVAudioSession"
+              },
+              {
+                "kind": "text",
+                "text": "."
+              },
+              {
+                "identifier": "doc://com.apple.avfaudio/documentation/AVFAudio/AVAudioSession/CategoryOptions-swift.struct",
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:@E@AVAudioSessionCategoryOptions",
+                "text": "CategoryOptions"
+              },
+              {
+                "kind": "text",
+                "text": " { "
+              },
+              {
+                "kind": "keyword",
+                "text": "get"
+              },
+              {
+                "kind": "text",
+                "text": " }"
+              }
+            ]
+          }
+        ],
+        "kind": "declarations"
+      },
+      {
+        "content": [
+          {
+            "anchor": "Discussion",
+            "level": 2,
+            "text": "Discussion",
+            "type": "heading"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "You can set this option explicitly only if the audio session category is ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.avfaudio/documentation/AVFAudio/AVAudioSession/Category-swift.struct/playAndRecord",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": ", ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.avfaudio/documentation/AVFAudio/AVAudioSession/Category-swift.struct/playback",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": ", or ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.avfaudio/documentation/AVFAudio/AVAudioSession/Category-swift.struct/multiRoute",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": ". If you set the audio session category to ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.avfaudio/documentation/AVFAudio/AVAudioSession/Category-swift.struct/ambient",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": ", the session automatically sets this option. Likewise, setting the ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.avfaudio/documentation/AVFAudio/AVAudioSession/CategoryOptions-swift.struct/duckOthers",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": " or ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.avfaudio/documentation/AVFAudio/AVAudioSession/CategoryOptions-swift.struct/interruptSpokenAudioAndMixWithOthers",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": " options also enables this option.",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "Clearing this option and then activating your session interrupts other audio sessions. If you set this option, your app mixes its audio with audio playing in background apps, such as the Music app.",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "kind": "content"
+      }
+    ]
+  },
+  {
+    "document": "background-modes",
+    "title": "UIBackgroundModes",
+    "abstract": [
+      {
+        "text": "Services provided by an app that require it to run in the background.",
+        "type": "text"
+      }
+    ],
+    "sections": [
+      {
+        "details": {
+          "ideTitle": "Required background modes",
+          "name": "UIBackgroundModes",
+          "platforms": [],
+          "titleStyle": "symbol",
+          "value": [
+            {
+              "arrayMode": true,
+              "baseType": "string "
+            }
+          ]
+        },
+        "kind": "details",
+        "title": "Details"
+      },
+      {
+        "kind": "possibleValues",
+        "title": "Possible Values",
+        "values": [
+          {
+            "content": [],
+            "name": "audio"
+          },
+          {
+            "content": [],
+            "name": "bluetooth-central"
+          },
+          {
+            "content": [],
+            "name": "bluetooth-peripheral"
+          },
+          {
+            "content": [],
+            "name": "external-accessory"
+          },
+          {
+            "content": [],
+            "name": "fetch"
+          },
+          {
+            "content": [],
+            "name": "location"
+          },
+          {
+            "content": [],
+            "name": "nearby-interaction"
+          },
+          {
+            "content": [],
+            "name": "network-authentication"
+          },
+          {
+            "content": [],
+            "name": "newsstand-content"
+          },
+          {
+            "content": [],
+            "name": "processing"
+          },
+          {
+            "content": [],
+            "name": "push-to-talk"
+          },
+          {
+            "content": [],
+            "name": "remote-notification"
+          },
+          {
+            "content": [],
+            "name": "screen-capture"
+          },
+          {
+            "content": [],
+            "name": "voip"
+          }
+        ]
+      },
+      {
+        "content": [
+          {
+            "anchor": "Discussion",
+            "level": 2,
+            "text": "Discussion",
+            "type": "heading"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "To add this key to your Information Property List, enable the Background Modes capability in Xcode. For information on configuring background execution modes and the platforms that support them, see ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.documentation/documentation/Xcode/configuring-background-execution-modes",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": ".",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "kind": "content"
+      }
+    ]
+  },
+  {
+    "document": "broadcast-handler",
+    "title": "RPBroadcastSampleHandler",
+    "abstract": [
+      {
+        "text": "An object that processes buffer objects as received from ReplayKit.",
+        "type": "text"
+      }
+    ],
+    "sections": [
+      {
+        "declarations": [
+          {
+            "languages": [
+              "swift"
+            ],
+            "platforms": [
+              "iOS",
+              "iPadOS",
+              "Mac Catalyst",
+              "macOS",
+              "tvOS",
+              "visionOS"
+            ],
+            "tokens": [
+              {
+                "kind": "keyword",
+                "text": "class"
+              },
+              {
+                "kind": "text",
+                "text": " "
+              },
+              {
+                "kind": "identifier",
+                "text": "RPBroadcastSampleHandler"
+              }
+            ]
+          }
+        ],
+        "kind": "declarations"
+      },
+      {
+        "content": [
+          {
+            "anchor": "overview",
+            "level": 2,
+            "text": "Overview",
+            "type": "heading"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "To handle ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.documentation/documentation/CoreMedia/CMSampleBuffer",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": " objects as captured by ReplayKit, you subclass ",
+                "type": "text"
+              },
+              {
+                "code": "RPBroadcastSampleHandler",
+                "type": "codeVoice"
+              },
+              {
+                "text": ". You enable this mode of handling by setting ",
+                "type": "text"
+              },
+              {
+                "code": "RPBroadcastProcessMode",
+                "type": "codeVoice"
+              },
+              {
+                "text": " in the extension’s ",
+                "type": "text"
+              },
+              {
+                "code": "Info.plist",
+                "type": "codeVoice"
+              },
+              {
+                "text": " file to ",
+                "type": "text"
+              },
+              {
+                "code": "RPBroadcastProcessModeSampleBuffer",
+                "type": "codeVoice"
+              },
+              {
+                "text": ".",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "In your subclass, implement the ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPBroadcastSampleHandler/processSampleBuffer(_:with:)",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": " method to handle video and audio buffers, as well as the ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPBroadcastSampleHandler/broadcastStarted(withSetupInfo:)",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": ", ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPBroadcastSampleHandler/broadcastFinished()",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": ", ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPBroadcastSampleHandler/broadcastPaused()",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": ", and ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPBroadcastSampleHandler/broadcastResumed()",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": " methods to handle starting and stopping the broadcast.",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "ReplayKit invokes methods in your ",
+                "type": "text"
+              },
+              {
+                "code": "RPBroadcastSampleHandler",
+                "type": "codeVoice"
+              },
+              {
+                "text": " subclass in a serial fashion. After invoking one method, ReplayKit won’t invoke another method until the first method returns. That means it’s safe for your implementations to update their stored state without the use of locks or synchronization to provide thread safety.",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "kind": "content"
+      }
+    ]
+  },
+  {
+    "document": "broadcast-picker",
+    "title": "RPSystemBroadcastPickerView",
+    "abstract": [
+      {
+        "text": "A view displaying a broadcast button that, when tapped, shows a broadcast picker.",
+        "type": "text"
+      }
+    ],
+    "sections": [
+      {
+        "declarations": [
+          {
+            "languages": [
+              "swift"
+            ],
+            "platforms": [
+              "iOS",
+              "iPadOS",
+              "Mac Catalyst",
+              "visionOS"
+            ],
+            "tokens": [
+              {
+                "kind": "keyword",
+                "text": "class"
+              },
+              {
+                "kind": "text",
+                "text": " "
+              },
+              {
+                "kind": "identifier",
+                "text": "RPSystemBroadcastPickerView"
+              }
+            ]
+          }
+        ],
+        "kind": "declarations"
+      },
+      {
+        "content": [
+          {
+            "anchor": "overview",
+            "level": 2,
+            "text": "Overview",
+            "type": "heading"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "Add this view to your view hierarchy to let users broadcast directly from your app. When a user taps the broadcast button, it displays a broadcast picker, allowing the user to select a broadcast provider.",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "content": [
+              {
+                "inlineContent": [
+                  {
+                    "text": "",
+                    "type": "text"
+                  },
+                  {
+                    "text": " ",
+                    "type": "text"
+                  },
+                  {
+                    "text": "Clicking the broadcast button has no effect in Mac apps built with Mac Catalyst.",
+                    "type": "text"
+                  }
+                ],
+                "type": "paragraph"
+              }
+            ],
+            "name": "Note",
+            "style": "note",
+            "type": "aside"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "You can limit the picker to a particular broadcast provider by setting ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPSystemBroadcastPickerView/preferredExtension",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": " to the bundle identifier of a broadcast extension. You can also show or hide the microphone button displayed in the picker by setting the ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPSystemBroadcastPickerView/showsMicrophoneButton",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": " property. Set these properties before presenting ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPSystemBroadcastPickerView",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": ", as shown here:",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "code": [
+              "class ViewController: UIViewController {",
+              "",
+              "    @IBOutlet var containerView: UIView!",
+              "    ",
+              "    override func viewDidLoad() {",
+              "        super.viewDidLoad()",
+              "     ",
+              "        let broadcastPicker = RPSystemBroadcastPickerView(frame: CGRect(x: 0, y: 0, width: 50, height: 50))",
+              "        broadcastPicker.preferredExtension = \"com.your-app.broadcast.extension\"",
+              "",
+              "        containerView.addSubview(broadcastPicker)",
+              "    }",
+              "    ",
+              "}",
+              ""
+            ],
+            "syntax": "swift",
+            "type": "codeListing"
+          }
+        ],
+        "kind": "content"
+      }
+    ]
+  },
+  {
+    "document": "sample-buffer",
+    "title": "processSampleBuffer(_:with:)",
+    "abstract": [
+      {
+        "text": "Processes video and audio data as it becomes available during a live broadcast.",
+        "type": "text"
+      }
+    ],
+    "sections": [
+      {
+        "declarations": [
+          {
+            "languages": [
+              "swift"
+            ],
+            "platforms": [
+              "iOS",
+              "iPadOS",
+              "Mac Catalyst",
+              "macOS",
+              "tvOS",
+              "visionOS"
+            ],
+            "tokens": [
+              {
+                "kind": "keyword",
+                "text": "func"
+              },
+              {
+                "kind": "text",
+                "text": " "
+              },
+              {
+                "kind": "identifier",
+                "text": "processSampleBuffer"
+              },
+              {
+                "kind": "text",
+                "text": "("
+              },
+              {
+                "kind": "externalParam",
+                "text": "_"
+              },
+              {
+                "kind": "text",
+                "text": " "
+              },
+              {
+                "kind": "internalParam",
+                "text": "sampleBuffer"
+              },
+              {
+                "kind": "text",
+                "text": ": "
+              },
+              {
+                "identifier": "doc://com.apple.documentation/documentation/CoreMedia/CMSampleBuffer",
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:@T@CMSampleBufferRef",
+                "text": "CMSampleBuffer"
+              },
+              {
+                "kind": "text",
+                "text": ", "
+              },
+              {
+                "kind": "externalParam",
+                "text": "with"
+              },
+              {
+                "kind": "text",
+                "text": " "
+              },
+              {
+                "kind": "internalParam",
+                "text": "sampleBufferType"
+              },
+              {
+                "kind": "text",
+                "text": ": "
+              },
+              {
+                "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPSampleBufferType",
+                "kind": "typeIdentifier",
+                "preciseIdentifier": "c:@E@RPSampleBufferType",
+                "text": "RPSampleBufferType"
+              },
+              {
+                "kind": "text",
+                "text": ")"
+              }
+            ]
+          }
+        ],
+        "kind": "declarations"
+      },
+      {
+        "kind": "parameters",
+        "parameters": [
+          {
+            "content": [
+              {
+                "inlineContent": [
+                  {
+                    "text": "A ",
+                    "type": "text"
+                  },
+                  {
+                    "identifier": "doc://com.apple.documentation/documentation/CoreMedia/CMSampleBuffer",
+                    "isActive": true,
+                    "type": "reference"
+                  },
+                  {
+                    "text": " object containing either audio or video data.",
+                    "type": "text"
+                  }
+                ],
+                "type": "paragraph"
+              }
+            ],
+            "name": "sampleBuffer"
+          },
+          {
+            "content": [
+              {
+                "inlineContent": [
+                  {
+                    "text": "An ",
+                    "type": "text"
+                  },
+                  {
+                    "identifier": "doc://com.apple.replaykit/documentation/ReplayKit/RPSampleBufferType",
+                    "isActive": true,
+                    "type": "reference"
+                  },
+                  {
+                    "text": " identifying the media type of the recorded sample.",
+                    "type": "text"
+                  }
+                ],
+                "type": "paragraph"
+              }
+            ],
+            "name": "sampleBufferType"
+          }
+        ]
+      },
+      {
+        "content": [
+          {
+            "anchor": "Discussion",
+            "level": 2,
+            "text": "Discussion",
+            "type": "heading"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "This method handles buffers of all sample buffer types throughout each broadcast. If no audio is available — for example, if the microphone isn’t capturing input — ReplayKit provides audio buffers whose samples represent continuous silence.",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "ReplayKit provides sample buffers sequentially. After invoking this method with a sample buffer, ReplayKit won’t invoke the method again for any sample buffer type until the current invocation returns.",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "The sample buffer passed to this method is available only until the method returns. You shouldn’t keep a reference to the sample buffer after the method returns.",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "kind": "content"
+      }
+    ]
+  },
+  {
+    "document": "vision-ocr",
+    "title": "VNRecognizeTextRequest",
+    "abstract": [
+      {
+        "text": "An image-analysis request that finds and recognizes text in an image.",
+        "type": "text"
+      }
+    ],
+    "sections": [
+      {
+        "declarations": [
+          {
+            "languages": [
+              "swift"
+            ],
+            "platforms": [
+              "iOS",
+              "iPadOS",
+              "Mac Catalyst",
+              "macOS",
+              "tvOS",
+              "visionOS"
+            ],
+            "tokens": [
+              {
+                "kind": "keyword",
+                "text": "class"
+              },
+              {
+                "kind": "text",
+                "text": " "
+              },
+              {
+                "kind": "identifier",
+                "text": "VNRecognizeTextRequest"
+              }
+            ]
+          }
+        ],
+        "kind": "declarations"
+      },
+      {
+        "kind": "mentions",
+        "mentions": [
+          "doc://Vision/documentation/Vision/recognizing-text-in-images"
+        ]
+      },
+      {
+        "content": [
+          {
+            "anchor": "overview",
+            "level": 2,
+            "text": "Overview",
+            "type": "heading"
+          },
+          {
+            "inlineContent": [
+              {
+                "text": "By default, a text recognition request first locates all possible glyphs or characters in the input image, and then analyzes each string. To specify or limit the languages to find in the request, set the ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://Vision/documentation/Vision/VNRecognizeTextRequest/recognitionLanguages",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": " property to an array that contains the names of the languages of text you want to recognize. Vision returns the result of this request in a ",
+                "type": "text"
+              },
+              {
+                "identifier": "doc://Vision/documentation/Vision/VNRecognizedTextObservation",
+                "isActive": true,
+                "type": "reference"
+              },
+              {
+                "text": " object.",
+                "type": "text"
+              }
+            ],
+            "type": "paragraph"
+          }
+        ],
+        "kind": "content"
+      }
+    ]
+  }
+]
