@@ -4,56 +4,90 @@ import Vision
 import ImageIO
 
 struct ChatFrameResult {
-    // nil means the bounded OCR budget has not completed this screen yet.
+    // nil means the bounded OCR budget has not completed this snapshot yet.
     let messages:[OCRLine]?
     let bubbles:Int
     let recognitions:Int
+    let capturedAt:Double
 }
 
-/// Runs synchronously during ReplayKit's sample callback. No video buffers escape.
+/// ReplayKit buffers never escape. A multi-bubble batch owns bounded bitmap copies
+/// of one snapshot, so changing upper decorations cannot restart lower OCR work.
 final class ChatFrameProcessor {
+    private struct PendingBubble {
+        let region:ChatRegion
+        let key:UInt64
+        var image:CGImage?
+        var text:String?
+    }
     private let context=CIContext(options:[.cacheIntermediates:false])
     private let analyzer=ChatLayoutAnalyzer()
     private var cache:[UInt64:String]=[:]
     private var order:[UInt64]=[]
-    func reset() {cache.removeAll();order.removeAll()}
+    private var pending:[PendingBubble]?
+    private var capturedAt=0.0
+    func reset() {cache.removeAll();order.removeAll();pending=nil}
     func process(_ source:CIImage,orientation:CGImagePropertyOrientation)throws->ChatFrameResult {
-        let oriented=source.oriented(forExifOrientation:Int32(orientation.rawValue))
-        let image=oriented.transformed(by:CGAffineTransform(translationX:-oriented.extent.minX,y:-oriented.extent.minY))
-        let extent=image.extent
-        guard extent.width>0,extent.height>0 else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0)}
-        let scale=min(1,640/max(extent.width,extent.height))
-        let small=image.transformed(by:CGAffineTransform(scaleX:scale,y:scale))
-        let tw=Int(small.extent.width),th=Int(small.extent.height)
-        guard tw>=32,th>=32,let thumbnail=context.createCGImage(small,from:CGRect(x:0,y:0,width:tw,height:th)),
-              let raster=Self.raster(thumbnail) else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0)}
-        let regions=analyzer.bubbles(in:raster)
-        var messages:[OCRLine]=[],recognitions=0,pending=false
-        for region in regions {
-            let key=fingerprint(raster,region)
-            let text:String
-            if let cached=cache[key] {text=cached}
-            else {
-                // At most two fresh bubble recognitions per frame, no full-screen OCR.
-                guard recognitions<2 else {pending=true;continue}
+        let now=ProcessInfo.processInfo.systemUptime
+        // Do not finish old snapshots after a long pause or thermal interruption.
+        if pending != nil,now-capturedAt>6 {pending=nil}
+        if pending==nil {
+            capturedAt=now
+            let oriented=source.oriented(forExifOrientation:Int32(orientation.rawValue))
+            let image=oriented.transformed(by:CGAffineTransform(translationX:-oriented.extent.minX,y:-oriented.extent.minY))
+            let extent=image.extent
+            guard extent.width>0,extent.height>0 else {return result([],0,0)}
+            let scale=min(1,640/max(extent.width,extent.height))
+            let small=image.transformed(by:CGAffineTransform(scaleX:scale,y:scale))
+            let tw=Int(small.extent.width),th=Int(small.extent.height)
+            guard tw>=32,th>=32,let thumbnail=context.createCGImage(small,from:CGRect(x:0,y:0,width:tw,height:th)),
+                  let raster=Self.raster(thumbnail) else {return result([],0,0)}
+            let regions=analyzer.bubbles(in:raster)
+            var batch:[PendingBubble]=[]
+            // <=10 copied crops, <=150,000 pixels each (~6MB RGBA total).
+            for region in regions {
+                let key=fingerprint(raster,region)
+                if let text=cache[key] {batch.append(PendingBubble(region:region,key:key,image:nil,text:text));continue}
                 let rect=CGRect(x:region.x*extent.width,y:(1-region.y-region.height)*extent.height,width:region.width*extent.width,height:region.height*extent.height).intersection(extent)
+                guard rect.width>0,rect.height>0 else {continue}
                 let cropped=image.cropped(to:rect).transformed(by:CGAffineTransform(translationX:-rect.minX,y:-rect.minY))
-                let downscale=min(1,800/max(rect.width,rect.height))
+                let downscale=min(1,800/max(rect.width,rect.height),sqrt(150_000/(rect.width*rect.height)))
                 let limited=cropped.transformed(by:CGAffineTransform(scaleX:downscale,y:downscale))
-                guard let cg=context.createCGImage(limited,from:limited.extent) else {pending=true;continue}
-                let request=VNRecognizeTextRequest();request.recognitionLevel = .accurate
-                request.recognitionLanguages=["ja-JP","en-US"];request.usesLanguageCorrection=true
-                try VNImageRequestHandler(cgImage:cg,options:[:]).perform([request]);recognitions += 1
-                let rows=(request.results ?? []).filter{($0.topCandidates(1).first?.confidence ?? 0)>=0.55}
-                    .sorted{a,b in a.boundingBox.midY == b.boundingBox.midY ? a.boundingBox.minX<b.boundingBox.minX:a.boundingBox.midY>b.boundingBox.midY}
-                text=rows.compactMap{$0.topCandidates(1).first?.string}.joined(separator:" ")
-                cache[key]=text;order.append(key)
-                if order.count>40 {cache.removeValue(forKey:order.removeFirst())}
+                guard let cg=context.createCGImage(limited,from:limited.extent),let owned=Self.copyBitmap(cg) else {continue}
+                batch.append(PendingBubble(region:region,key:key,image:owned,text:nil))
             }
-            guard !text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty else {continue}
-            messages.append(OCRLine(text:text,confidence:1,x:region.x,y:region.y,width:region.width,height:region.height))
+            pending=batch
         }
-        return ChatFrameResult(messages:pending ? nil:messages,bubbles:regions.count,recognitions:recognitions)
+        var batch=pending ?? [],recognitions=0
+        for i in batch.indices where batch[i].text==nil {
+            if let text=cache[batch[i].key] {batch[i].text=text;batch[i].image=nil;continue}
+            guard recognitions<2,let cg=batch[i].image else {continue}
+            let request=VNRecognizeTextRequest();request.recognitionLevel = .accurate
+            request.recognitionLanguages=["ja-JP","en-US"];request.usesLanguageCorrection=true
+            try VNImageRequestHandler(cgImage:cg,options:[:]).perform([request]);recognitions += 1
+            let rows=(request.results ?? []).filter{($0.topCandidates(1).first?.confidence ?? 0)>=0.55}
+                .sorted{a,b in a.boundingBox.midY == b.boundingBox.midY ? a.boundingBox.minX<b.boundingBox.minX:a.boundingBox.midY>b.boundingBox.midY}
+            let text=rows.compactMap{$0.topCandidates(1).first?.string}.joined(separator:" ")
+            batch[i].text=text;batch[i].image=nil
+            cache[batch[i].key]=text;order.append(batch[i].key)
+            if order.count>40 {cache.removeValue(forKey:order.removeFirst())}
+        }
+        guard batch.allSatisfy({$0.text != nil}) else {pending=batch;return result(nil,batch.count,recognitions)}
+        let messages=batch.compactMap { item -> OCRLine? in
+            guard let text=item.text,!text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty else {return nil}
+            let r=item.region
+            return OCRLine(text:text,confidence:1,x:r.x,y:r.y,width:r.width,height:r.height)
+        }
+        pending=nil
+        return result(messages,batch.count,recognitions)
+    }
+    private func result(_ messages:[OCRLine]?,_ bubbles:Int,_ recognitions:Int)->ChatFrameResult {
+        ChatFrameResult(messages:messages,bubbles:bubbles,recognitions:recognitions,capturedAt:capturedAt)
+    }
+    private static func copyBitmap(_ image:CGImage)->CGImage? {
+        guard let cg=CGContext(data:nil,width:image.width,height:image.height,bitsPerComponent:8,bytesPerRow:image.width*4,space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue) else {return nil}
+        cg.draw(image,in:CGRect(x:0,y:0,width:image.width,height:image.height))
+        return cg.makeImage()
     }
     private static func raster(_ image:CGImage)->LayoutRaster? {
         let w=image.width,h=image.height

@@ -34,7 +34,7 @@ final class SampleHandler:RPBroadcastSampleHandler {
                 failures=0
                 if let lines=result.messages {
                     let comments=detector.ingest(lines)
-                    if !comments.isEmpty {DispatchQueue.main.async { [weak self] in self?.speaker.enqueue(comments,time:now) }}
+                    if !comments.isEmpty {DispatchQueue.main.async { [weak self] in self?.speaker.enqueue(comments,time:result.capturedAt) }}
                 }
                 // No recognized text is logged. Record only expensive recognition passes.
                 if result.recognitions>0 {NSLog("GravityReader bubbles=%d OCR=%d latencyMs=%.0f",result.bubbles,result.recognitions,(ProcessInfo.processInfo.systemUptime-now)*1000)}
