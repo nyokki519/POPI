@@ -17,8 +17,8 @@ func room(width:Int,height:Int,withAvatar:Bool=true,comment:String="こんばん
         cg.textPosition=CGPoint(x:x*w,y:(1-y)*h);CTLineDraw(line,cg)
     }
     rect(0,0,1,1,CGColor(red:0.10,green:0.38,blue:0.48,alpha:1))
-    rect(0.16,0.42,0.55,0.075,CGColor(gray:tint,alpha:1))
-    text(comment,0.185,0.468)
+    rect(0.16,0.42,0.55,comment.contains("\n") ? 0.14:0.075,CGColor(gray:tint,alpha:1))
+    for (index,line) in comment.components(separatedBy:"\n").enumerated() {text(line,0.185,0.468+CGFloat(index)*0.035)}
     if withAvatar {cg.setFillColor(CGColor(red:0.86,green:0.67,blue:0.78,alpha:1));cg.fillEllipse(in:CGRect(x:0.047*w,y:(1-0.395)*h-0.043*w,width:0.086*w,height:0.086*w))}
     rect(0.025,0.28,0.60,0.075,CGColor(gray:0.98,alpha:1));text("公式アナウンス",0.045,0.33)
     rect(0.025,0.90,0.45,0.055,CGColor(gray:0.98,alpha:1));text("メッセージを送信",0.045,0.94)
@@ -60,5 +60,10 @@ check("animated upper bubbles cannot starve third message",completed)
 let rotate=room(width:750,height:1334)
 let rotated=try ChatFrameProcessor().process(rotate.oriented(forExifOrientation:8),orientation:.right)
 check("rotated sample returns upright chat",rotated.messages?.first?.text.replacingOccurrences(of:" ",with:"")=="こんばんは")
+for (message,expectedWords) in [("@しおちゃん おかえりー！",["しおちゃん","おかえり"]),("@ぱやみ 多分2人は\nおこちゃまなんだよ",["ぱやみ","おこちゃまなんだよ"])] {
+ let extracted=try ChatFrameProcessor().process(room(width:1170,height:2532,comment:message),orientation:.up)
+ let body=normalizeComment(extracted.messages?.first?.text ?? "").replacingOccurrences(of:" ",with:"")
+ check("mentioned user and message body retained: \(expectedWords[0])",expectedWords.allSatisfy{body.contains($0)})
+}
 print("Native Vision tests: \(failures==0 ? "PASS":"FAIL") — generated test images, not a GRAVITY recording")
 exit(failures==0 ? 0:1)

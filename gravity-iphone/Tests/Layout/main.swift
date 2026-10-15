@@ -50,6 +50,21 @@ var wideKeyboard=Canvas(400,500);wideKeyboard.rect(0,0,1,1,(25,95,120));wideKeyb
 for row in 0..<3 {for col in 0..<9 {wideKeyboard.rect(0.02+Double(col)*0.108,0.60+Double(row)*0.09,0.085,0.065,(250,250,250))}}
 check("wide viewport keyboard beside old avatar excluded",analyzer.bubbles(in:wideKeyboard.frame).isEmpty)
 check("invalid byte count is rejected",analyzer.bubbles(in:LayoutRaster(width:10,height:10,rgba:[])).isEmpty)
+// Paid frames can break the circular outline. These are generated geometry
+// regressions, not recordings of real paid assets.
+for variant in 0..<3 {
+ var paid=fixture(320,560,avatar:false)
+ let cx=Int(0.09*320),cy=Int(0.395*560),radius=14
+ for dy in -22...22 {for dx in -22...22 {
+    let x=Double(dx),y=Double(dy)
+    let inside:Bool
+    if variant==0 {inside=x*x/(18*18)+y*y/(11*11)<=1}
+    else if variant==1 {let angle=atan2(y,x);let r=14.0+4*cos(5*angle);inside=x*x+y*y<=r*r}
+    else {inside=x*x+y*y<=Double(radius*radius)}
+    if inside {paid.pixel(cx+dx,cy+dy,variant==2 ? (55,120,140):(220,170,200))}
+ }}
+ check("decorated avatar variant \(variant) keeps its bubble",analyzer.bubbles(in:paid.frame).count==1)
+}
 var policy=RecognitionBudget()
 check("first frame allowed",policy.shouldProcess(now:0,thermal:0))
 check("ordinary 30fps callback skipped",!policy.shouldProcess(now:0.03,thermal:0))

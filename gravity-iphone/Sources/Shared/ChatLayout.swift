@@ -6,6 +6,9 @@ struct ChatRegion {
     let x:Double;let y:Double;let width:Double;let height:Double
 }
 struct ChatLayoutAnalyzer {
+    private static let directions=(0..<24).map { i -> (Double,Double) in
+        let angle=Double(i)*2*Double.pi/24;return (cos(angle),sin(angle))
+    }
     private struct Component {var x:Int;var y:Int;var maxX:Int;var maxY:Int;var area:Int
         var width:Int {maxX-x+1};var height:Int {maxY-y+1}
     }
@@ -79,8 +82,13 @@ struct ChatLayoutAnalyzer {
     private func hasAvatar(leftOf bubble:Component,viewport:Component,pixels:[UInt8],w:Int,h:Int)->Bool {
         let minRadius=max(3,Int(Double(viewport.width)*0.029))
         let maxRadius=max(minRadius,Int(Double(viewport.width)*0.058))
-        let angles=(0..<24).map{Double($0)*2*Double.pi/24}
         for radius in stride(from:minRadius,through:maxRadius,by:2) {
+            // A wide annulus tolerates oval/crowned paid frames. Require evidence
+            // around all four sides; a nearby text stroke alone is insufficient.
+            let offsets=Self.directions.map { x,y in
+                (Int((x*Double(radius)*0.70).rounded()),Int((y*Double(radius)*0.70).rounded()),
+                 Int((x*Double(radius)*1.35).rounded()),Int((y*Double(radius)*1.35).rounded()))
+            }
             let minX=max(viewport.x+radius,Int(Double(bubble.x)-Double(radius)*3.1))
             let maxX=min(bubble.x-radius-2,viewport.x+Int(Double(viewport.width)*0.22))
             let minY=max(radius,Int(Double(bubble.y)-Double(radius)*2.7))
@@ -88,16 +96,15 @@ struct ChatLayoutAnalyzer {
             guard minX<=maxX,minY<=maxY else {continue}
             for cy in stride(from:minY,through:maxY,by:2) {
                 for cx in stride(from:minX,through:maxX,by:2) {
-                    var edges=0
-                    for a in angles {
-                        let ix=Int((Double(cx)+cos(a)*Double(radius)*0.83).rounded()),iy=Int((Double(cy)+sin(a)*Double(radius)*0.83).rounded())
-                        let ox=Int((Double(cx)+cos(a)*Double(radius)*1.17).rounded()),oy=Int((Double(cy)+sin(a)*Double(radius)*1.17).rounded())
+                    var edges=0,sectors=[0,0,0,0]
+                    for (index,offset) in offsets.enumerated() {
+                        let ix=cx+offset.0,iy=cy+offset.1,ox=cx+offset.2,oy=cy+offset.3
                         guard ix>=0,iy>=0,ox>=0,oy>=0,ix<w,ox<w,iy<h,oy<h else {continue}
                         let i=(iy*w+ix)*4,o=(oy*w+ox)*4
                         let contrast=abs(Int(pixels[i])-Int(pixels[o]))+abs(Int(pixels[i+1])-Int(pixels[o+1]))+abs(Int(pixels[i+2])-Int(pixels[o+2]))
-                        if contrast>=100 {edges += 1}
+                        if contrast>=70 {edges += 1;sectors[index/6] += 1}
                     }
-                    if edges>=19 {return true}
+                    if edges>=16 && sectors.allSatisfy({$0>=2}) {return true}
                 }
             }
         }
