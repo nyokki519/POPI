@@ -1,0 +1,25 @@
+{
+  "compiler": "Swift 5.7.2 (official Linux build; same Swift release generation as Xcode 14.2)",
+  "before": {
+    "errors": [
+      "the compiler is unable to type-check this expression in reasonable time",
+      "failed to produce diagnostic for expression"
+    ],
+    "expression": "four-Int tuple inferred in directions.map",
+    "expression_typecheck_ms": 70681
+  },
+  "after": {
+    "change": "typed offset array, explicit Double/Int intermediates, ordinary for loop; same arithmetic and thresholds",
+    "typecheck_exit": 0,
+    "longest_expression_typecheck_ms": 28.2,
+    "comment_queue_tests": 32,
+    "layout_budget_tests": 23,
+    "replay_frames": 24,
+    "settings_tests": "passed",
+    "source_sha256": "9ca77cf56ae20a531d00d6d4ba28dc5534bbf2847acfbcb9836254e70952c19d"
+  },
+  "limits": [
+    "Linux compiler and Foundation only; not full Xcode14.2/UIKit SDK validation",
+    "User Mac rebuild and live GRAVITY verification still required"
+  ]
+}

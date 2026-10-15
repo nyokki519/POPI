@@ -85,9 +85,20 @@ struct ChatLayoutAnalyzer {
         for radius in stride(from:minRadius,through:maxRadius,by:2) {
             // A wide annulus tolerates oval/crowned paid frames. Require evidence
             // around all four sides; a nearby text stroke alone is insufficient.
-            let offsets=Self.directions.map { x,y in
-                (Int((x*Double(radius)*0.70).rounded()),Int((y*Double(radius)*0.70).rounded()),
-                 Int((x*Double(radius)*1.35).rounded()),Int((y*Double(radius)*1.35).rounded()))
+            // Keep each arithmetic step and the tuple element types explicit.
+            // Swift 5.7.2 (Xcode 14.2) otherwise exhausts its constraint solver
+            // while inferring a four-Int tuple inside a generic map closure.
+            var offsets:[(Int,Int,Int,Int)]=[]
+            offsets.reserveCapacity(Self.directions.count)
+            let radiusValue:Double=Double(radius)
+            for direction in Self.directions {
+                let xAtRadius:Double=direction.0*radiusValue
+                let yAtRadius:Double=direction.1*radiusValue
+                let innerX:Int=Int((xAtRadius*0.70).rounded())
+                let innerY:Int=Int((yAtRadius*0.70).rounded())
+                let outerX:Int=Int((xAtRadius*1.35).rounded())
+                let outerY:Int=Int((yAtRadius*1.35).rounded())
+                offsets.append((innerX,innerY,outerX,outerY))
             }
             let minX=max(viewport.x+radius,Int(Double(bubble.x)-Double(radius)*3.1))
             let maxX=min(bubble.x-radius-2,viewport.x+Int(Double(viewport.width)*0.22))
