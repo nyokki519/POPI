@@ -1,8 +1,8 @@
 {
-  "version": "0.3",
+  "version": "0.4",
   "display_name": "オカマ読み上げスッキリアプリ",
-  "source_commit": "cd9c2b6b219c6f78cde23a8dd71487e2fa016b1f",
-  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38752322203",
+  "source_commit": "34984e6092e073a2fa586e132a7b7acc28654372",
+  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38822602092",
   "conclusion": "success",
   "steps": [
     {
@@ -48,44 +48,32 @@
   ],
   "tests": {
     "comment_and_queue": 32,
-    "layout_and_budget": 23,
-    "native_Vision_checks": 24,
+    "layout_and_budget": 28,
+    "native_Vision_checks": 28,
     "replay_frames": 24,
-    "native_resolutions": [
-      [
-        750,
-        1334
-      ],
-      [
-        1170,
-        2532
-      ],
-      [
-        1290,
-        2796
-      ]
-    ],
-    "new_cases": [
-      "oval avatar",
-      "star/decorated avatar",
-      "low-contrast avatar",
-      "mention text at confidence 0.5 retained",
-      "multiline mention text retained"
-    ],
-    "native_images": "Generated images; not a recording of GRAVITY",
-    "native_UI": "SE3 simulator app install, launch, screenshot succeeded"
+    "configuration": "passed",
+    "legacy_compiler": "Official Swift 5.7.2 Linux: core/layout/replay/configuration passed; UIKit sources parsed only. Full Xcode14.2 build not performed.",
+    "native_images": "Generated fixtures, including gray bubbles with white Japanese text; not actual live GRAVITY screenshots."
   },
-  "asset": "Generated realistic floral photograph, app only, static; UIImage released on host background",
-  "not_tested_this_version": [
-    "Live GRAVITY user/official messages",
-    "All paid avatar assets",
-    "Real iPhone CPU, memory and heat",
-    "Signed installation on user new iPhone",
-    "Future iOS versions"
+  "UI_smoke": {
+    "ci_url": "https://github.com/nyokki519/POPI/actions/runs/38822141196",
+    "source_commit": "a61a395ad5d40b8d21884eb6a5ca1516e455ef31",
+    "result": "SE3 simulator install, launch and screenshot passed. UI source unchanged since this run.",
+    "preview": "preview-v0.4.jpg",
+    "sha256": "60524c5cb771fa6287214f4252060f0a58a80e5392658ad99d5e934629cdfc4f"
+  },
+  "changes": [
+    "Gray and muted chat surfaces with avatar/geometry checks",
+    "Dark keyboard row exclusion",
+    "Selected-image diagnosis using same frame processor; manual speech tests",
+    "Periodic count-only diagnostics, including zero counts"
   ],
-  "review": "Focused independent code review found no critical/important issues; no device verification inferred",
-  "native_UI_preview": "preview-v0.3.jpg: complete SE3 simulator screenshot, transfer SHA256 verified and visually inspected; not a live GRAVITY test",
-  "previous_UI_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38749021450",
-  "patch": "Xcode14 Swift5.7.2 tuple inference fix",
-  "legacy_compiler_evidence": "xcode14-compatibility.json: reproduced errors in official Swift5.7.2 Linux; same full core suite passed after fix. Full Xcode14.2 build on user Mac remains untested."
+  "startup": "Original silent baseline preserved; empty-screen arming was rejected because non-room screens cannot be distinguished reliably.",
+  "not_tested": [
+    "Live GRAVITY recognition and background audio on a real iPhone",
+    "Real user photo selection interaction and diagnostic speech audibility",
+    "Signed installation on user phones",
+    "Real device memory/CPU/thermal performance",
+    "All paid avatar/bubble styles or future iOS releases"
+  ]
 }
