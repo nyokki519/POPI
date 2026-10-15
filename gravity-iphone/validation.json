@@ -1,6 +1,7 @@
 {
-  "source_commit": "241270df32ad0847687bc45143df9552aead80af",
-  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38033684397",
+  "version": "0.2",
+  "source_commit": "7e11308ccdc83148a4efaf89f8396d4c21e5f6ad",
+  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38737903101",
   "conclusion": "success",
   "steps": [
     {
@@ -13,6 +14,10 @@
     },
     {
       "name": "Swift comment core tests",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native Vision bubble OCR and cache tests",
       "conclusion": "success"
     },
     {
@@ -36,13 +41,46 @@
       "conclusion": "success"
     }
   ],
-  "tested": "Pure Swift core tests, Apple SDK app+extension simulator build, unsigned iPhone device build",
-  "not_tested": [
-    "Signed iPhone installation",
-    "GRAVITY live OCR",
-    "Audible background TTS",
-    "GRAVITY voice-room audio compatibility",
-    "Real-device memory limits"
+  "tests": {
+    "comment_and_queue": 32,
+    "layout_and_budget": 20,
+    "native_Vision_checks": 22,
+    "replay_frames": 24,
+    "native_images": "Generated, not the uploaded GRAVITY screenshot",
+    "native_resolutions": [
+      [
+        750,
+        1334
+      ],
+      [
+        1170,
+        2532
+      ],
+      [
+        1290,
+        2796
+      ]
+    ],
+    "native_cases": [
+      "bubble text only",
+      "no avatar excluded",
+      "keyboard excluded",
+      "unchanged cache skips OCR",
+      "changed text invalidates cache",
+      "animated upper bubbles do not starve third",
+      "orientation correction"
+    ]
+  },
+  "previous_version_user_reports": [
+    "Personal Team install using Xcode14.2 device window drag",
+    "iPhone SE3 iOS26.3.1 app launch and speech output; broad OCR read noncomment UI"
   ],
-  "review": "Fresh review completed; system broadcast picker and audio startup failure handling corrected"
+  "not_tested_this_version": [
+    "Live GRAVITY user and official messages",
+    "Real iPhone performance, memory and heat",
+    "Other physical iPhone models",
+    "Signed update installation",
+    "All themes and popup layouts"
+  ],
+  "review": "Fresh review finding reproduced as failing Apple native test then fixed with owned bounded snapshots; same test passed"
 }
