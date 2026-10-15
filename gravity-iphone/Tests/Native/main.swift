@@ -4,8 +4,8 @@ import CoreImage
 import ImageIO
 import Foundation
 var failures=0
-func check(_ name:String,_ condition:Bool) {print("\(condition ? "PASS":"FAIL") \(name)");if !condition {failures += 1}}
-func room(width:Int,height:Int,withAvatar:Bool=true,comment:String="こんばんは",keyboard:Bool=false)->CIImage {
+func check(_ name:String,_ condition:Bool) {print("\(condition ? "PASS":"FAIL") \(name)");if !condition {failures += 1;print("::error::"+name)}}
+func room(width:Int,height:Int,withAvatar:Bool=true,comment:String="こんばんは",keyboard:Bool=false,three:Bool=false,tint:CGFloat=0.98)->CIImage {
     let color=CGColorSpaceCreateDeviceRGB()
     let cg=CGContext(data:nil,width:width,height:height,bitsPerComponent:8,bytesPerRow:width*4,space:color,bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue)!
     let w=CGFloat(width),h=CGFloat(height)
@@ -17,13 +17,20 @@ func room(width:Int,height:Int,withAvatar:Bool=true,comment:String="こんばん
         cg.textPosition=CGPoint(x:x*w,y:(1-y)*h);CTLineDraw(line,cg)
     }
     rect(0,0,1,1,CGColor(red:0.10,green:0.38,blue:0.48,alpha:1))
-    rect(0.16,0.42,0.55,0.075,CGColor(gray:0.98,alpha:1))
+    rect(0.16,0.42,0.55,0.075,CGColor(gray:tint,alpha:1))
     text(comment,0.185,0.468)
     if withAvatar {cg.setFillColor(CGColor(red:0.86,green:0.67,blue:0.78,alpha:1));cg.fillEllipse(in:CGRect(x:0.047*w,y:(1-0.395)*h-0.043*w,width:0.086*w,height:0.086*w))}
     rect(0.025,0.28,0.60,0.075,CGColor(gray:0.98,alpha:1));text("公式アナウンス",0.045,0.33)
     rect(0.025,0.90,0.45,0.055,CGColor(gray:0.98,alpha:1));text("メッセージを送信",0.045,0.94)
     if keyboard {
         for row in 0..<3 {for col in 0..<9 {rect(0.02+CGFloat(col)*0.108,0.60+CGFloat(row)*0.09,0.085,0.065,CGColor(gray:0.98,alpha:1));text("あ",0.025+CGFloat(col)*0.108,0.645+CGFloat(row)*0.09)}}
+    }
+    if three {
+        for (y,word) in [(CGFloat(0.58),"ありがとう"),(CGFloat(0.74),"よろしく")] {
+            rect(0.16,y,0.55,0.075,CGColor(gray:y<0.7 ? tint:0.98,alpha:1))
+            text(word,0.185,y+0.048)
+            cg.setFillColor(CGColor(red:0.86,green:0.67,blue:0.78,alpha:1));cg.fillEllipse(in:CGRect(x:0.047*w,y:(1-y+0.025)*h-0.043*w,width:0.086*w,height:0.086*w))
+        }
     }
     return CIImage(cgImage:cg.makeImage()!)
 }
@@ -42,5 +49,16 @@ for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
 }
 let noAvatar=try ChatFrameProcessor().process(room(width:750,height:1334,withAvatar:false),orientation:.up)
 check("native announcement without avatar excluded",noAvatar.messages?.isEmpty==true)
+let animated=ChatFrameProcessor()
+var completed=false
+for i in 0..<4 {
+    let frame=try animated.process(room(width:750,height:1334,three:true,tint:0.90+CGFloat(i)*0.025),orientation:.up)
+    check("per-frame OCR limit remains two",frame.recognitions<=2)
+    if let messages=frame.messages,messages.count==3 {completed=true}
+}
+check("animated upper bubbles cannot starve third message",completed)
+let rotate=room(width:750,height:1334)
+let rotated=try ChatFrameProcessor().process(rotate.oriented(forExifOrientation:8),orientation:.right)
+check("rotated sample returns upright chat",rotated.messages?.first?.text.replacingOccurrences(of:" ",with:"")=="こんばんは")
 print("Native Vision tests: \(failures==0 ? "PASS":"FAIL") — generated test images, not a GRAVITY recording")
 exit(failures==0 ? 0:1)

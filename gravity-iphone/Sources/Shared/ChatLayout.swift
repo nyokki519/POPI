@@ -27,14 +27,29 @@ struct ChatLayoutAnalyzer {
         let light=components(w:w,h:h) {p in
             pixels[p*4]>=205 && pixels[p*4+1]>=205 && pixels[p*4+2]>=205
         }
+        // A keyboard row contains many small separated bright key caps. Suppress
+        // the whole band, even if an old chat avatar remains immediately above it.
+        let keys=light.filter { c in
+            Double(c.y-viewport.y)>vh*0.45 && Double(c.width)>=vw*0.04 && Double(c.width)<=vw*0.14 &&
+            Double(c.height)>=vh*0.025 && Double(c.height)<=vh*0.12
+        }
+        var keyRows:[[Component]]=[]
+        for key in keys.sorted(by:{$0.y<$1.y}) {
+            if let last=keyRows.last,let first=last.first,abs(first.y-key.y)<=max(3,Int(vh*0.012)) {keyRows[keyRows.count-1].append(key)}
+            else {keyRows.append([key])}
+        }
+        let keyboardRows=keyRows.filter { row in
+            row.count>=6 && (row.map{$0.maxX}.max()! - row.map{$0.x}.min()!)>Int(vw*0.55)
+        }
+        let keyboardTop=keyboardRows.count>=2 ? keyboardRows.compactMap{$0.first?.y}.min()!:h
         var found:[ChatRegion]=[]
         for c in light {
             let left=Double(c.x-viewport.x)/vw,top=Double(c.y-viewport.y)/vh
             let bottom=Double(c.maxY-viewport.y+1)/vh
-            guard left>=0.11,left<=0.36,top>=0.18,bottom<=0.94,
-                Double(c.width)>=vw*0.17,Double(c.width)<=vw*0.76,
+            guard left>=0.11,left<=0.36,top>=0.18,bottom<=0.94,c.maxY<keyboardTop,
+                Double(c.width)>=vw*0.08,Double(c.width)<=vw*0.76,
                 Double(c.height)>=vw*0.035,Double(c.height)<=vh*0.28,
-                Double(c.width)/Double(c.height)>=1.45,
+                Double(c.width)/Double(c.height)>=0.9,
                 Double(c.area)/Double(c.width*c.height)>=0.55,
                 hasAvatar(leftOf:c,viewport:viewport,pixels:pixels,w:w,h:h) else {continue}
             found.append(ChatRegion(x:Double(c.x)/Double(w),y:Double(c.y)/Double(h),width:Double(c.width)/Double(w),height:Double(c.height)/Double(h)))

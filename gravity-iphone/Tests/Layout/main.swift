@@ -41,6 +41,14 @@ check("keyboard keys are not comments",analyzer.bubbles(in:keyboard.frame).isEmp
 var decorated=fixture(320,560)
 decorated.rect(0.16,0.6,0.58,0.16,(240,248,255));decorated.circle(0.09,0.575,0.043)
 check("multiline decorated-color bubble retained",analyzer.bubbles(in:decorated.frame).count==2)
+var short=Canvas(320,560);short.rect(0,0,1,1,(25,95,120));short.circle(0.09,0.395,0.043);short.rect(0.16,0.42,0.115,0.055,(250,250,250))
+check("short one-character sized bubble retained",analyzer.bubbles(in:short.frame).count==1)
+var raisedKeyboard=Canvas(320,560);raisedKeyboard.rect(0,0,1,1,(25,95,120));raisedKeyboard.circle(0.09,0.575,0.043)
+for row in 0..<3 {for col in 0..<9 {raisedKeyboard.rect(0.02+Double(col)*0.108,0.60+Double(row)*0.09,0.085,0.065,(250,250,250))}}
+check("keyboard below an old avatar still excluded",analyzer.bubbles(in:raisedKeyboard.frame).isEmpty)
+var wideKeyboard=Canvas(400,500);wideKeyboard.rect(0,0,1,1,(25,95,120));wideKeyboard.circle(0.09,0.575,0.043)
+for row in 0..<3 {for col in 0..<9 {wideKeyboard.rect(0.02+Double(col)*0.108,0.60+Double(row)*0.09,0.085,0.065,(250,250,250))}}
+check("wide viewport keyboard beside old avatar excluded",analyzer.bubbles(in:wideKeyboard.frame).isEmpty)
 check("invalid byte count is rejected",analyzer.bubbles(in:LayoutRaster(width:10,height:10,rgba:[])).isEmpty)
 var policy=RecognitionBudget()
 check("first frame allowed",policy.shouldProcess(now:0,thermal:0))
