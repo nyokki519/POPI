@@ -4,12 +4,13 @@ import AVFoundation
 import ImageIO
 import CoreImage
 final class SampleHandler:RPBroadcastSampleHandler {
-    private var detector=CommentDetector(filterSystemLabels:false)
+    private var detector=CommentDetector(filterSystemLabels:false,emptyScreenStartsSession:true)
     private let processor=ChatFrameProcessor()
     private var budget=RecognitionBudget()
     private var configuration=ReaderConfiguration()
     private var paused=true
     private var failures=0
+    private var lastDiagnostic=0.0
     private let speaker=PrivateSpeaker()
     override func broadcastStarted(withSetupInfo setupInfo:[String:NSObject]?) {
         configuration=ReaderConfiguration(setupInfo);detector.reset();processor.reset();budget=RecognitionBudget();paused=false;failures=0
@@ -36,8 +37,12 @@ final class SampleHandler:RPBroadcastSampleHandler {
                     let comments=detector.ingest(lines)
                     if !comments.isEmpty {DispatchQueue.main.async { [weak self] in self?.speaker.enqueue(comments,time:result.capturedAt) }}
                 }
-                // No recognized text is logged. Record only expensive recognition passes.
-                if result.recognitions>0 {NSLog("GravityReader bubbles=%d OCR=%d latencyMs=%.0f",result.bubbles,result.recognitions,(ProcessInfo.processInfo.systemUptime-now)*1000)}
+                // Periodic zero counts distinguish missed shapes from failed OCR.
+                // No screenshot, username, or recognized text is logged.
+                if now-lastDiagnostic>=10 {
+                    lastDiagnostic=now
+                    NSLog("GravityReader bubbles=%d OCR=%d rows=%d pending=%d latencyMs=%.0f",result.bubbles,result.recognitions,result.messages?.count ?? 0,result.messages==nil ? 1:0,(ProcessInfo.processInfo.systemUptime-now)*1000)
+                }
             } catch {
                 failures += 1
                 if failures>=5 {paused=true;DispatchQueue.main.async { [weak self] in self?.speaker.stop() };finishBroadcastWithError(NSError(domain:"GravityReader",code:2,userInfo:[NSLocalizedDescriptionKey:"文字認識に連続して失敗しました。画面配信を再開始してください。"]))}

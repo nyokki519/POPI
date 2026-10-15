@@ -17,6 +17,8 @@ func normalizeComment(_ text: String) -> String {
 }
 
 final class CommentDetector {
+    private var emptyFrames=0
+    private let emptyScreenStartsSession:Bool
     private var previous: [String]?
     private var candidate: [String] = []
     private var counts: [Int] = []
@@ -26,13 +28,14 @@ final class CommentDetector {
         "^(?:.+(?:が入室しました|が退出しました|が参加しました|が退室しました)|[0-9]{1,2}:[0-9]{2})$")
     private let systemLabels: Set<String> = ["コメントを入力", "コメントする", "メッセージを入力", "送信", "GRAVITY"]
 
-    init(ignoreWords: [String] = [], filterSystemLabels:Bool=true) {
+    init(ignoreWords: [String] = [], filterSystemLabels:Bool=true,emptyScreenStartsSession:Bool=false) {
+        self.emptyScreenStartsSession=emptyScreenStartsSession
         self.filterSystemLabels=filterSystemLabels
         self.ignoreWords = ignoreWords.map(normalizeComment).filter { !$0.isEmpty }
     }
 
     func reset() {
-        previous = nil; candidate = []; counts = []
+        previous = nil; candidate = []; counts = [];emptyFrames=0
     }
 
     private func isSystem(_ text: String) -> Bool {
@@ -67,7 +70,14 @@ final class CommentDetector {
         // Keep OCR rows explicit: do not guess usernames or merge two comments.
         let screen = Array(sorted.map { String(normalizeComment($0.text).prefix(1000)) }
             .filter { !$0.isEmpty && !isSystem($0) }.suffix(60))
-        guard !screen.isEmpty else { candidate=[]; counts=[]; return [] }
+        guard !screen.isEmpty else {
+            emptyFrames=min(2,emptyFrames+1);candidate=[];counts=[]
+            // Only arm an initially empty session, never rearm previous history
+            // after a room switch, keyboard, occlusion, or OCR dropout.
+            if emptyScreenStartsSession,previous==nil,emptyFrames>=2 {previous=[]}
+            return []
+        }
+        emptyFrames=0
         guard let old=previous else { previous=screen; return [] }
         if sameScreen(old,screen) { previous=screen;candidate=[];counts=[];return [] }
         // LCS preserves occurrence counts. Only suffix after last overlap is new.
@@ -77,7 +87,7 @@ final class CommentDetector {
                 dp[i][j] = equivalent(old[i],screen[j]) ? 1+dp[i+1][j+1] : max(dp[i+1][j],dp[i][j+1])
             }
         }
-        guard dp[0][0]>0 else { previous=screen;candidate=[];counts=[];return [] } // No overlap: rebase rather than replay old history.
+        guard old.isEmpty || dp[0][0]>0 else { previous=screen;candidate=[];counts=[];return [] } // No overlap: rebase rather than replay old history.
         var i=0, j=0, lastMatch = -1
         while i<old.count && j<screen.count {
             if equivalent(old[i],screen[j]) { lastMatch=j; i += 1; j += 1 }

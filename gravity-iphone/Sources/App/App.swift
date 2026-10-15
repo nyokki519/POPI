@@ -58,6 +58,10 @@ final class ReaderViewController:UIViewController {
         let main=UIStackView(arrangedSubviews:[status,heading,description,action]);main.axis = .vertical;main.spacing=14
         content.addArrangedSubview(card(main,color:UIColor.white.withAlphaComponent(0.97)))
 
+        let diagnose=UIButton(type:.system);diagnose.setTitle("読まれないときの確認",for:.normal)
+        diagnose.setTitleColor(.white,for:.normal);diagnose.titleLabel?.font = .boldSystemFont(ofSize:16)
+        diagnose.addTarget(self,action:#selector(openDiagnostics),for:.touchUpInside)
+        content.addArrangedSubview(diagnose)
         let steps=UIStackView();steps.axis = .vertical;steps.spacing=16
         steps.addArrangedSubview(label("かんたん、3ステップ",size:17,weight:.bold,color:ink))
         for (number,text) in [("01","配信先で「オカマ読み上げスッキリアプリ」を選ぶ"),("02","GRAVITYのルームを開く"),("03","新しく届いたコメントを聞く")] {
@@ -70,7 +74,7 @@ final class ReaderViewController:UIViewController {
         content.addArrangedSubview(note)
         let privacy=label("画面・コメントの保存や送信はしません。\nイヤホン推奨。ルームへの音声送出は未対応です。\n装飾やテーマにより認識できない場合があります。",size:11,weight:.regular,color:UIColor.white.withAlphaComponent(0.80))
         content.addArrangedSubview(privacy)
-        content.addArrangedSubview(label("PRIVATE ・ v0.3",size:10,weight:.semibold,color:UIColor.white.withAlphaComponent(0.60)))
+        content.addArrangedSubview(label("PRIVATE ・ v0.4",size:10,weight:.semibold,color:UIColor.white.withAlphaComponent(0.60)))
         // No animated background. Release the decoded photograph while GRAVITY is
         // foreground; the broadcast extension never bundles or loads this asset.
         observers.append(NotificationCenter.default.addObserver(forName:UIApplication.didEnterBackgroundNotification,object:nil,queue:.main) { [weak self] _ in self?.photograph.image=nil })
@@ -79,6 +83,7 @@ final class ReaderViewController:UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews();CATransaction.begin();CATransaction.setDisableActions(true);shade.frame=photograph.bounds;CATransaction.commit()
     }
+    @objc private func openDiagnostics() {present(DiagnosticsViewController(),animated:true)}
     private func loadPhoto() {
         if let path=Bundle.main.path(forResource:"FloralBackground",ofType:"png") {photograph.image=UIImage(contentsOfFile:path)}
     }

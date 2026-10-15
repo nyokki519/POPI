@@ -12,7 +12,7 @@ func room(width:Int,height:Int,withAvatar:Bool=true,comment:String="こんばん
     func rect(_ x:CGFloat,_ y:CGFloat,_ rw:CGFloat,_ rh:CGFloat,_ color:CGColor) {cg.setFillColor(color);cg.fill(CGRect(x:x*w,y:(1-y-rh)*h,width:rw*w,height:rh*h))}
     func text(_ text:String,_ x:CGFloat,_ y:CGFloat) {
         let font=CTFontCreateWithName("HiraginoSans-W3" as CFString,w*0.041,nil)
-        let attrs:[NSAttributedString.Key:Any]=[NSAttributedString.Key(kCTFontAttributeName as String):font,NSAttributedString.Key(kCTForegroundColorAttributeName as String):CGColor(gray:0,alpha:1)]
+        let attrs:[NSAttributedString.Key:Any]=[NSAttributedString.Key(kCTFontAttributeName as String):font,NSAttributedString.Key(kCTForegroundColorAttributeName as String):CGColor(gray:tint<0.5 ? 1:0,alpha:1)]
         let line=CTLineCreateWithAttributedString(NSAttributedString(string:text,attributes:attrs))
         cg.textPosition=CGPoint(x:x*w,y:(1-y)*h);CTLineDraw(line,cg)
     }
@@ -66,6 +66,12 @@ for (message,expectedWords) in [("@しおちゃん おかえりー！",["しお�
  let body=normalizeComment(extracted.messages?.first?.text ?? "").replacingOccurrences(of:" ",with:"")
  print("::notice::Synthetic mention OCR bubbles=\(extracted.bubbles) count=\(extracted.messages?.count ?? -1) text=\(body)")
  check("mentioned user and message body retained: \(expectedWords[0])",expectedWords.allSatisfy{body.contains($0)})
+}
+for tint:CGFloat in [0.22,0.72] {
+ let dark=try ChatFrameProcessor().process(room(width:750,height:1334,tint:tint),orientation:.up)
+ check("gray bubble native OCR \(tint)",dark.messages?.first?.text.replacingOccurrences(of:" ",with:"")=="こんばんは")
+ let noIcon=try ChatFrameProcessor().process(room(width:750,height:1334,withAvatar:false,tint:tint),orientation:.up)
+ check("gray bubble without avatar is excluded \(tint)",noIcon.messages?.isEmpty==true)
 }
 print("Native Vision tests: \(failures==0 ? "PASS":"FAIL") — generated test images, not a GRAVITY recording")
 exit(failures==0 ? 0:1)

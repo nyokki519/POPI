@@ -65,6 +65,14 @@ for variant in 0..<3 {
  }}
  check("decorated avatar variant \(variant) keeps its bubble",analyzer.bubbles(in:paid.frame).count==1)
 }
+// Regression based on the public dark room screenshot: gray bubble / white text.
+for color:(UInt8,UInt8,UInt8) in [(55,55,55),(160,180,205)] {
+ var dark=Canvas(320,560);dark.rect(0,0,1,1,(0,0,0))
+ dark.circle(0.09,0.395,0.043);dark.rect(0.16,0.42,0.46,0.065,color)
+ check("non-white avatar-backed bubble retained \(color)",analyzer.bubbles(in:dark.frame).count==1)
+ var alone=Canvas(320,560);alone.rect(0,0,1,1,(0,0,0));alone.rect(0.16,0.42,0.46,0.065,color)
+ check("non-white bubble without avatar excluded \(color)",analyzer.bubbles(in:alone.frame).isEmpty)
+}
 var policy=RecognitionBudget()
 check("first frame allowed",policy.shouldProcess(now:0,thermal:0))
 check("ordinary 30fps callback skipped",!policy.shouldProcess(now:0.03,thermal:0))

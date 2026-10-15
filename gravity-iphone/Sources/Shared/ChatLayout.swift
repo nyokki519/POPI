@@ -25,8 +25,8 @@ struct ChatLayoutAnalyzer {
         if let c=largest,c.area>w*h/5 {viewport=c}
         else {viewport=Component(x:0,y:0,maxX:w-1,maxY:h-1,area:w*h)}
         let vw=Double(viewport.width),vh=Double(viewport.height)
-        // This version deliberately supports light chat bubbles. Unsupported styles
-        // are omitted rather than reverting to reading the full screen.
+        // Separate light and muted/dark surfaces. Keep avatar and geometry checks
+        // for both; never fall back to recognizing the entire screen.
         let light=components(w:w,h:h) {p in
             pixels[p*4]>=205 && pixels[p*4+1]>=205 && pixels[p*4+2]>=205
         }
@@ -45,8 +45,13 @@ struct ChatLayoutAnalyzer {
             row.count>=6 && (row.map{$0.maxX}.max()! - row.map{$0.x}.min()!)>Int(vw*0.55)
         }
         let keyboardTop=keyboardRows.count>=2 ? keyboardRows.compactMap{$0.first?.y}.min()!:h
+        let muted=components(w:w,h:h) {p in
+            let r=Int(pixels[p*4]),g=Int(pixels[p*4+1]),b=Int(pixels[p*4+2])
+            let low=min(r,min(g,b)),high=max(r,max(g,b))
+            return low>=24 && high<=230 && high-low<=55 && low<205
+        }
         var found:[ChatRegion]=[]
-        for c in light {
+        for c in light+muted {
             let left=Double(c.x-viewport.x)/vw,top=Double(c.y-viewport.y)/vh
             let bottom=Double(c.maxY-viewport.y+1)/vh
             guard left>=0.11,left<=0.36,top>=0.18,bottom<=0.94,c.maxY<keyboardTop,

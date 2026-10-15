@@ -23,7 +23,7 @@ for p in sorted((root/'Resources').rglob('*.png')):
 for name in targetids:
     app=name=='GravityReader'
     identifier='jp.nyokki519.GravityReader'+('' if app else '.'+name)
-    info={'CFBundleDevelopmentRegion':'ja','CFBundleExecutable':'$(EXECUTABLE_NAME)','CFBundleIdentifier':'$(PRODUCT_BUNDLE_IDENTIFIER)','CFBundleInfoDictionaryVersion':'6.0','CFBundleName':'$(PRODUCT_NAME)','CFBundlePackageType':'APPL' if app else 'XPC!','CFBundleShortVersionString':'0.3','CFBundleVersion':'3','CFBundleDisplayName':'オカマ読み上げスッキリアプリ'}
+    info={'CFBundleDevelopmentRegion':'ja','CFBundleExecutable':'$(EXECUTABLE_NAME)','CFBundleIdentifier':'$(PRODUCT_BUNDLE_IDENTIFIER)','CFBundleInfoDictionaryVersion':'6.0','CFBundleName':'$(PRODUCT_NAME)','CFBundlePackageType':'APPL' if app else 'XPC!','CFBundleShortVersionString':'0.4','CFBundleVersion':'4','CFBundleDisplayName':'オカマ読み上げスッキリアプリ'}
     if app:info.update(UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationPortrait'])
     else:
         attrs={'RPBroadcastExtension':'jp.nyokki519.GravityReader.Upload'} if name=='Setup' else {'RPBroadcastProcessMode':'RPBroadcastProcessModeSampleBuffer'}
@@ -32,7 +32,7 @@ for name in targetids:
     product=obj(name+'product','PBXFileReference',explicitFileType='wrapper.application' if app else 'wrapper.app-extension',includeInIndex='0',path=name+('.app' if app else '.appex'),sourceTree='BUILT_PRODUCTS_DIR');products.append(product)
     sources=[]
     for rel,fid in fileids.items():
-        if '/'+('App' if app else name)+'/' in rel or (not app and '/Shared/' in rel and (name=='Upload' or rel.endswith('Configuration.swift'))):
+        if '/'+('App' if app else name)+'/' in rel or '/Shared/' in rel or (app and rel.endswith('/ChatFrameProcessor.swift')):
             sources.append(obj(name+rel+'build','PBXBuildFile',fileRef=fid))
     phases=[obj(name+'sources','PBXSourcesBuildPhase',buildActionMask='2147483647',files=sources,runOnlyForDeploymentPostprocessing='0'),obj(name+'frameworks','PBXFrameworksBuildPhase',buildActionMask='2147483647',files=[],runOnlyForDeploymentPostprocessing='0')]
     resources=[obj(name+rel+'resource','PBXBuildFile',fileRef=fid) for rel,fid in resourceids.items()] if app else []
