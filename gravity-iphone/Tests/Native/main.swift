@@ -1,5 +1,4 @@
 import AppKit
-import Vision
 import CoreText
 import CoreImage
 import ImageIO
@@ -64,16 +63,6 @@ check("rotated sample returns upright chat",rotated.messages?.first?.text.replac
 for (message,expectedWords) in [("@しおちゃん おかえりー！",["しおちゃん","おかえり"]),("@ぱやみ 多分2人は\nおこちゃまなんだよ",["ぱやみ","おこちゃまなんだよ"])] {
  let sample=room(width:1170,height:2532,comment:message)
  let extracted=try ChatFrameProcessor().process(sample,orientation:.up)
- let cropHeight:CGFloat=message.contains("\n") ? 0.14:0.075
- let diagnosticRect=CGRect(x:0.16*1170,y:(1-0.42-cropHeight)*2532,width:0.55*1170,height:cropHeight*2532)
- let diagnostic=sample.cropped(to:diagnosticRect)
- let raw=VNRecognizeTextRequest();raw.recognitionLevel = .accurate;raw.recognitionLanguages=["ja-JP","en-US"]
- try VNImageRequestHandler(ciImage:diagnostic,options:[:]).perform([raw])
- print("::notice::Raw synthetic OCR: \(raw.results?.map{($0.topCandidates(1).first?.string ?? "")+" confidence="+String($0.topCandidates(1).first?.confidence ?? 0)} ?? [])")
- if let cg=CIContext().createCGImage(sample.transformed(by:CGAffineTransform(scaleX:0.35,y:0.35)),from:sample.extent.applying(CGAffineTransform(scaleX:0.35,y:0.35))),let bytes=NSBitmapImageRep(cgImage:cg).representation(using:.jpeg,properties:[.compressionFactor:0.6]) {
-    print("::notice title=TEST_IMAGE::"+bytes.base64EncodedString())
- }
-
  let body=normalizeComment(extracted.messages?.first?.text ?? "").replacingOccurrences(of:" ",with:"")
  print("::notice::Synthetic mention OCR bubbles=\(extracted.bubbles) count=\(extracted.messages?.count ?? -1) text=\(body)")
  check("mentioned user and message body retained: \(expectedWords[0])",expectedWords.allSatisfy{body.contains($0)})

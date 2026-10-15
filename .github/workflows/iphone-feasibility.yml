@@ -12,7 +12,7 @@ permissions:
 jobs:
   ios-extension-build:
     runs-on: macos-15
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,6 +45,9 @@ jobs:
           python3 scripts/verify-bundle.py "$APP"
           test -f "$APP/PlugIns/Upload.appex/Upload"
           plutil -lint "$APP/Info.plist" "$APP/PlugIns/Upload.appex/Info.plist"
+      - name: Native floral home simulator smoke test
+        shell: bash
+        run: python3 gravity-iphone/scripts/smoke-ui.py "$RUNNER_TEMP/GravityBuild/Build/Products/Debug-iphonesimulator/GravityReader.app"
       - name: Build unsigned iPhone device binaries
         shell: bash
         run: |

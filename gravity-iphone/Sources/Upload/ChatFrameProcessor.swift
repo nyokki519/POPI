@@ -65,7 +65,10 @@ final class ChatFrameProcessor {
             let request=VNRecognizeTextRequest();request.recognitionLevel = .accurate
             request.recognitionLanguages=["ja-JP","en-US"];request.usesLanguageCorrection=true
             try VNImageRequestHandler(cgImage:cg,options:[:]).perform([request]);recognitions += 1
-            let rows=(request.results ?? []).filter{($0.topCandidates(1).first?.confidence ?? 0)>=0.55}
+            // Japanese Vision candidates can be correct at confidence 0.5 (verified
+            // with mention/multiline fixtures). Geometry has already restricted
+            // recognition to an avatar-backed bubble; do not discard those rows.
+            let rows=(request.results ?? []).filter{($0.topCandidates(1).first?.confidence ?? 0)>=0.4}
                 .sorted{a,b in a.boundingBox.midY == b.boundingBox.midY ? a.boundingBox.minX<b.boundingBox.minX:a.boundingBox.midY>b.boundingBox.midY}
             let text=rows.compactMap{$0.topCandidates(1).first?.string}.joined(separator:" ")
             batch[i].text=text;batch[i].image=nil
