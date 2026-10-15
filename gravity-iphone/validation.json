@@ -1,7 +1,8 @@
 {
-  "version": "0.2",
-  "source_commit": "7e11308ccdc83148a4efaf89f8396d4c21e5f6ad",
-  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38737903101",
+  "version": "0.3",
+  "display_name": "オカマ読み上げスッキリアプリ",
+  "source_commit": "e53b63cd94481440b9d191043da31bd486791902",
+  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38749021450",
   "conclusion": "success",
   "steps": [
     {
@@ -29,6 +30,10 @@
       "conclusion": "success"
     },
     {
+      "name": "Native floral home simulator smoke test",
+      "conclusion": "success"
+    },
+    {
       "name": "Build unsigned iPhone device binaries",
       "conclusion": "success"
     },
@@ -43,10 +48,9 @@
   ],
   "tests": {
     "comment_and_queue": 32,
-    "layout_and_budget": 20,
-    "native_Vision_checks": 22,
+    "layout_and_budget": 23,
+    "native_Vision_checks": 24,
     "replay_frames": 24,
-    "native_images": "Generated, not the uploaded GRAVITY screenshot",
     "native_resolutions": [
       [
         750,
@@ -61,26 +65,24 @@
         2796
       ]
     ],
-    "native_cases": [
-      "bubble text only",
-      "no avatar excluded",
-      "keyboard excluded",
-      "unchanged cache skips OCR",
-      "changed text invalidates cache",
-      "animated upper bubbles do not starve third",
-      "orientation correction"
-    ]
+    "new_cases": [
+      "oval avatar",
+      "star/decorated avatar",
+      "low-contrast avatar",
+      "mention text at confidence 0.5 retained",
+      "multiline mention text retained"
+    ],
+    "native_images": "Generated images; not a recording of GRAVITY",
+    "native_UI": "SE3 simulator app install, launch, screenshot succeeded"
   },
-  "previous_version_user_reports": [
-    "Personal Team install using Xcode14.2 device window drag",
-    "iPhone SE3 iOS26.3.1 app launch and speech output; broad OCR read noncomment UI"
-  ],
+  "asset": "Generated realistic floral photograph, app only, static; UIImage released on host background",
   "not_tested_this_version": [
-    "Live GRAVITY user and official messages",
-    "Real iPhone performance, memory and heat",
-    "Other physical iPhone models",
-    "Signed update installation",
-    "All themes and popup layouts"
+    "Live GRAVITY user/official messages",
+    "All paid avatar assets",
+    "Real iPhone CPU, memory and heat",
+    "Signed installation on user new iPhone",
+    "Future iOS versions"
   ],
-  "review": "Fresh review finding reproduced as failing Apple native test then fixed with owned bounded snapshots; same test passed"
+  "review": "Focused independent code review found no critical/important issues; no device verification inferred",
+  "native_UI_preview": "preview-v0.3.jpg: complete SE3 simulator screenshot, transfer SHA256 verified and visually inspected; not a live GRAVITY test"
 }
