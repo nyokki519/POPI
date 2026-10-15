@@ -21,8 +21,15 @@ try:
         p=Path(tmp)/'home.jpg'
         run('xcrun','simctl','io',uid,'screenshot','--type=jpeg',str(p))
         small=Path(tmp)/'home-preview.jpg'
-        run('sips','--resampleWidth','320','-s','formatOptions','25',str(p),'--out',str(small))
-        raw=small.read_bytes();data=base64.b64encode(raw).decode()
+        width=300
+        while True:
+            run('sips','--resampleWidth',str(width),'-s','formatOptions','20',str(p),'--out',str(small))
+            raw=small.read_bytes();data=base64.b64encode(raw).decode()
+            # Each workflow step publishes at most ten notices. Reserve one for
+            # metadata and keep at most eight chunks, safely under both limits.
+            if len(data)<=24000:break
+            width-=40
+            if width<100:raise RuntimeError('UI preview cannot fit annotation budget')
         # GitHub's annotations truncate messages after 4096 characters.
         size=3000
         print('::notice title=FLORAL_UI_META::'+json.dumps({'chunks':(len(data)+size-1)//size,'sha256':hashlib.sha256(raw).hexdigest()}))
