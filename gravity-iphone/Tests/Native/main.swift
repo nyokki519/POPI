@@ -63,6 +63,7 @@ check("rotated sample returns upright chat",rotated.messages?.first?.text.replac
 for (message,expectedWords) in [("@しおちゃん おかえりー！",["しおちゃん","おかえり"]),("@ぱやみ 多分2人は\nおこちゃまなんだよ",["ぱやみ","おこちゃまなんだよ"])] {
  let extracted=try ChatFrameProcessor().process(room(width:1170,height:2532,comment:message),orientation:.up)
  let body=normalizeComment(extracted.messages?.first?.text ?? "").replacingOccurrences(of:" ",with:"")
+ print("::notice::Synthetic mention OCR bubbles=\(extracted.bubbles) count=\(extracted.messages?.count ?? -1) text=\(body)")
  check("mentioned user and message body retained: \(expectedWords[0])",expectedWords.allSatisfy{body.contains($0)})
 }
 print("Native Vision tests: \(failures==0 ? "PASS":"FAIL") — generated test images, not a GRAVITY recording")
