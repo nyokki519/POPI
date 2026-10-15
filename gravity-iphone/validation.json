@@ -1,8 +1,8 @@
 {
   "version": "0.3",
   "display_name": "オカマ読み上げスッキリアプリ",
-  "source_commit": "e53b63cd94481440b9d191043da31bd486791902",
-  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38749021450",
+  "source_commit": "cd9c2b6b219c6f78cde23a8dd71487e2fa016b1f",
+  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38752322203",
   "conclusion": "success",
   "steps": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "name": "Native floral home simulator smoke test",
-      "conclusion": "success"
+      "conclusion": "skipped"
     },
     {
       "name": "Build unsigned iPhone device binaries",
@@ -84,5 +84,8 @@
     "Future iOS versions"
   ],
   "review": "Focused independent code review found no critical/important issues; no device verification inferred",
-  "native_UI_preview": "preview-v0.3.jpg: complete SE3 simulator screenshot, transfer SHA256 verified and visually inspected; not a live GRAVITY test"
+  "native_UI_preview": "preview-v0.3.jpg: complete SE3 simulator screenshot, transfer SHA256 verified and visually inspected; not a live GRAVITY test",
+  "previous_UI_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38749021450",
+  "patch": "Xcode14 Swift5.7.2 tuple inference fix",
+  "legacy_compiler_evidence": "xcode14-compatibility.json: reproduced errors in official Swift5.7.2 Linux; same full core suite passed after fix. Full Xcode14.2 build on user Mac remains untested."
 }
