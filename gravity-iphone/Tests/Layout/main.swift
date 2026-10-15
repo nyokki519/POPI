@@ -73,6 +73,9 @@ for color:(UInt8,UInt8,UInt8) in [(55,55,55),(160,180,205)] {
  var alone=Canvas(320,560);alone.rect(0,0,1,1,(0,0,0));alone.rect(0.16,0.42,0.46,0.065,color)
  check("non-white bubble without avatar excluded \(color)",analyzer.bubbles(in:alone.frame).isEmpty)
 }
+var darkKeys=Canvas(400,500);darkKeys.rect(0,0,1,1,(0,0,0));darkKeys.circle(0.09,0.575,0.043)
+for row in 0..<3 {for col in 0..<9 {darkKeys.rect(0.02+Double(col)*0.108,0.60+Double(row)*0.09,0.085,0.065,(55,55,55))}}
+check("dark keyboard beside old avatar is excluded",analyzer.bubbles(in:darkKeys.frame).isEmpty)
 var policy=RecognitionBudget()
 check("first frame allowed",policy.shouldProcess(now:0,thermal:0))
 check("ordinary 30fps callback skipped",!policy.shouldProcess(now:0.03,thermal:0))

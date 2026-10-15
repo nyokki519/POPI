@@ -30,9 +30,15 @@ struct ChatLayoutAnalyzer {
         let light=components(w:w,h:h) {p in
             pixels[p*4]>=205 && pixels[p*4+1]>=205 && pixels[p*4+2]>=205
         }
+        let muted=components(w:w,h:h) {p in
+            let r=Int(pixels[p*4]),g=Int(pixels[p*4+1]),b=Int(pixels[p*4+2])
+            let low=min(r,min(g,b)),high=max(r,max(g,b))
+            return low>=24 && high<=230 && high-low<=55 && low<205
+        }
+        let surfaces=light+muted
         // A keyboard row contains many small separated bright key caps. Suppress
         // the whole band, even if an old chat avatar remains immediately above it.
-        let keys=light.filter { c in
+        let keys=surfaces.filter { c in
             Double(c.y-viewport.y)>vh*0.45 && Double(c.width)>=vw*0.04 && Double(c.width)<=vw*0.14 &&
             Double(c.height)>=vh*0.025 && Double(c.height)<=vh*0.12
         }
@@ -45,13 +51,8 @@ struct ChatLayoutAnalyzer {
             row.count>=6 && (row.map{$0.maxX}.max()! - row.map{$0.x}.min()!)>Int(vw*0.55)
         }
         let keyboardTop=keyboardRows.count>=2 ? keyboardRows.compactMap{$0.first?.y}.min()!:h
-        let muted=components(w:w,h:h) {p in
-            let r=Int(pixels[p*4]),g=Int(pixels[p*4+1]),b=Int(pixels[p*4+2])
-            let low=min(r,min(g,b)),high=max(r,max(g,b))
-            return low>=24 && high<=230 && high-low<=55 && low<205
-        }
         var found:[ChatRegion]=[]
-        for c in light+muted {
+        for c in surfaces {
             let left=Double(c.x-viewport.x)/vw,top=Double(c.y-viewport.y)/vh
             let bottom=Double(c.maxY-viewport.y+1)/vh
             guard left>=0.11,left<=0.36,top>=0.18,bottom<=0.94,c.maxY<keyboardTop,
