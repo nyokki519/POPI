@@ -2,7 +2,7 @@
 """Launch the native home screen; publish a small screenshot as CI annotations.
 Screenshots contain only this app's UI, never GRAVITY or user screen data.
 """
-import subprocess,json,sys,tempfile,base64,time
+import subprocess,json,sys,tempfile,base64,time,hashlib
 from pathlib import Path
 app=Path(sys.argv[1])
 def run(*args,timeout=120):
@@ -20,9 +20,14 @@ try:
     with tempfile.TemporaryDirectory() as tmp:
         p=Path(tmp)/'home.jpg'
         run('xcrun','simctl','io',uid,'screenshot','--type=jpeg',str(p))
-        data=base64.b64encode(p.read_bytes()).decode()
-        for i,start in enumerate(range(0,len(data),45000)):
-            print(f'::notice title=FLORAL_UI_{i:03d}::{data[start:start+45000]}')
+        small=Path(tmp)/'home-preview.jpg'
+        run('sips','--resampleWidth','320','-s','formatOptions','25',str(p),'--out',str(small))
+        raw=small.read_bytes();data=base64.b64encode(raw).decode()
+        # GitHub's annotations truncate messages after 4096 characters.
+        size=3000
+        print('::notice title=FLORAL_UI_META::'+json.dumps({'chunks':(len(data)+size-1)//size,'sha256':hashlib.sha256(raw).hexdigest()}))
+        for i,start in enumerate(range(0,len(data),size)):
+            print(f'::notice title=FLORAL_UI_{i:03d}::{data[start:start+size]}')
     print('PASS simulator launch and screenshot; no GRAVITY/ReplayKit runtime assertion')
 finally:
     subprocess.run(['xcrun','simctl','shutdown',uid],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
