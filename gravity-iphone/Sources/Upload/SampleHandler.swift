@@ -4,7 +4,7 @@ import AVFoundation
 import ImageIO
 import CoreImage
 final class SampleHandler:RPBroadcastSampleHandler {
-    private var detector=CommentDetector(filterSystemLabels:false,emptyScreenStartsSession:true)
+    private var detector=CommentDetector(filterSystemLabels:false)
     private let processor=ChatFrameProcessor()
     private var budget=RecognitionBudget()
     private var configuration=ReaderConfiguration()
