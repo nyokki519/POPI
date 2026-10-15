@@ -10,3 +10,5 @@ trap 'rm -rf "$WORK"' EXIT
 "$WORK/replay"
 "$COMPILER" -module-cache-path "$WORK/cache" -swift-version 5 "$ROOT/Sources/Shared/Configuration.swift" "$ROOT/Tests/Configuration/main.swift" -o "$WORK/configuration"
 "$WORK/configuration"
+"$COMPILER" -module-cache-path "$WORK/cache" -swift-version 5 -O "$ROOT/Sources/Shared/ChatLayout.swift" "$ROOT/Tests/Layout/main.swift" -o "$WORK/layout"
+"$WORK/layout"

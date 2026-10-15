@@ -19,6 +19,8 @@ jobs:
           persist-credentials: false
       - name: Swift comment core tests
         run: bash gravity-iphone/scripts/test-core.sh
+      - name: Native Vision bubble OCR and cache tests
+        run: bash gravity-iphone/scripts/test-native.sh
       - name: iOS Broadcast Upload Extension API validation
         shell: bash
         run: |

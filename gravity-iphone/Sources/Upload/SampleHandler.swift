@@ -2,15 +2,17 @@ import ReplayKit
 import Vision
 import AVFoundation
 import ImageIO
+import CoreImage
 final class SampleHandler:RPBroadcastSampleHandler {
-    private var detector=CommentDetector()
+    private var detector=CommentDetector(filterSystemLabels:false)
+    private let processor=ChatFrameProcessor()
+    private var budget=RecognitionBudget()
     private var configuration=ReaderConfiguration()
     private var paused=true
-    private var lastOCR=0.0
     private var failures=0
     private let speaker=PrivateSpeaker()
     override func broadcastStarted(withSetupInfo setupInfo:[String:NSObject]?) {
-        configuration=ReaderConfiguration(setupInfo);detector.reset();paused=false;lastOCR=0;failures=0
+        configuration=ReaderConfiguration(setupInfo);detector.reset();processor.reset();budget=RecognitionBudget();paused=false;failures=0
         let rate=Float(configuration.rate)
         DispatchQueue.main.async { [weak self] in self?.startSpeaker(rate:rate) }
         NSLog("GravityReader started; images and recognized text are not stored or uploaded")
@@ -21,26 +23,21 @@ final class SampleHandler:RPBroadcastSampleHandler {
     override func processSampleBuffer(_ sampleBuffer:CMSampleBuffer,with type:RPSampleBufferType) {
         guard type == .video,!paused else {return}
         let now=ProcessInfo.processInfo.systemUptime
-        guard now-lastOCR>=0.75,let pixels=CMSampleBufferGetImageBuffer(sampleBuffer) else {return}
-        lastOCR=now
+        let thermal=ProcessInfo.processInfo.thermalState.rawValue
+        guard budget.shouldProcess(now:now,thermal:thermal),let pixels=CMSampleBufferGetImageBuffer(sampleBuffer) else {return}
         autoreleasepool {
+            defer {budget.record(duration:ProcessInfo.processInfo.systemUptime-now)}
             let attached=CMGetAttachment(sampleBuffer,key:RPVideoSampleOrientationKey as CFString,attachmentModeOut:nil) as? NSNumber
             let orientation=attached.flatMap{CGImagePropertyOrientation(rawValue:$0.uint32Value)} ?? .up
-            let request=VNRecognizeTextRequest();request.recognitionLevel = .accurate
-            request.recognitionLanguages=["ja-JP","en-US"];request.usesLanguageCorrection=true
-            request.regionOfInterest=CGRect(x:0,y:1-configuration.bottom,width:1,height:configuration.bottom-configuration.top)
             do {
-                // ReplayKit buffers are valid only during this callback: synchronous OCR.
-                try VNImageRequestHandler(cvPixelBuffer:pixels,orientation:orientation,options:[:]).perform([request])
+                let result=try processor.process(CIImage(cvPixelBuffer:pixels),orientation:orientation)
                 failures=0
-                let lines=(request.results ?? []).compactMap { result -> OCRLine? in
-                    guard let text=result.topCandidates(1).first else {return nil}
-                    let b=result.boundingBox
-                    return OCRLine(text:text.string,confidence:Double(text.confidence),x:b.minX,y:1-b.maxY,width:b.width,height:b.height)
+                if let lines=result.messages {
+                    let comments=detector.ingest(lines)
+                    if !comments.isEmpty {DispatchQueue.main.async { [weak self] in self?.speaker.enqueue(comments,time:now) }}
                 }
-                let comments=detector.ingest(lines)
-                if !comments.isEmpty {DispatchQueue.main.async { [weak self] in self?.speaker.enqueue(comments,time:now) }}
-                NSLog("GravityReader OCR lines=%d new=%d latencyMs=%.0f",lines.count,comments.count,(ProcessInfo.processInfo.systemUptime-now)*1000)
+                // No recognized text is logged. Record only expensive recognition passes.
+                if result.recognitions>0 {NSLog("GravityReader bubbles=%d OCR=%d latencyMs=%.0f",result.bubbles,result.recognitions,(ProcessInfo.processInfo.systemUptime-now)*1000)}
             } catch {
                 failures += 1
                 if failures>=5 {paused=true;DispatchQueue.main.async { [weak self] in self?.speaker.stop() };finishBroadcastWithError(NSError(domain:"GravityReader",code:2,userInfo:[NSLocalizedDescriptionKey:"文字認識に連続して失敗しました。画面配信を再開始してください。"]))}
@@ -48,7 +45,7 @@ final class SampleHandler:RPBroadcastSampleHandler {
         }
     }
     override func broadcastPaused() {paused=true;DispatchQueue.main.async { [weak self] in self?.speaker.stop() }}
-    override func broadcastResumed() {paused=false;detector.reset();lastOCR=0;let rate=Float(configuration.rate);DispatchQueue.main.async { [weak self] in self?.startSpeaker(rate:rate) }}
+    override func broadcastResumed() {paused=false;detector.reset();processor.reset();budget=RecognitionBudget();let rate=Float(configuration.rate);DispatchQueue.main.async { [weak self] in self?.startSpeaker(rate:rate) }}
     override func broadcastFinished() {paused=true;DispatchQueue.main.async { [weak self] in self?.speaker.stop() };NSLog("GravityReader finished")}
 }
 // All speaker state is confined to the main queue. Serial ReplayKit callbacks

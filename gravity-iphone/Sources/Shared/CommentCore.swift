@@ -20,12 +20,14 @@ final class CommentDetector {
     private var previous: [String]?
     private var candidate: [String] = []
     private var counts: [Int] = []
+    private let filterSystemLabels:Bool
     private let ignoreWords: [String]
     private let systemPattern = try! NSRegularExpression(pattern:
         "^(?:.+(?:が入室しました|が退出しました|が参加しました|が退室しました)|[0-9]{1,2}:[0-9]{2})$")
     private let systemLabels: Set<String> = ["コメントを入力", "コメントする", "メッセージを入力", "送信", "GRAVITY"]
 
-    init(ignoreWords: [String] = []) {
+    init(ignoreWords: [String] = [], filterSystemLabels:Bool=true) {
+        self.filterSystemLabels=filterSystemLabels
         self.ignoreWords = ignoreWords.map(normalizeComment).filter { !$0.isEmpty }
     }
 
@@ -34,8 +36,8 @@ final class CommentDetector {
     }
 
     private func isSystem(_ text: String) -> Bool {
-        systemLabels.contains(text) || ignoreWords.contains(where: text.contains) ||
-            systemPattern.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil
+        ignoreWords.contains(where:text.contains) || (filterSystemLabels && (systemLabels.contains(text) ||
+            systemPattern.firstMatch(in:text,range:NSRange(text.startIndex...,in:text)) != nil))
     }
 
     /// One edit in a sufficiently long line tolerates a flickering OCR glyph.
