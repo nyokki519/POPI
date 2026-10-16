@@ -210,7 +210,7 @@ struct ChatLayoutAnalyzer {
                 if difference(cx+d,cy+r/2,cx+d,cy+r+2)>60 {sides |= 8}
                 if difference(cx-r/2,cy+d,cx+r/2,cy+d)>40 {texture += 1}
             }
-            if sides.nonzeroBitCount>=3,texture>=2 {return (cx,cy,r)}
+            if sides.nonzeroBitCount >= (bodyAligned ? 4:3),texture>=2 {return (cx,cy,r)}
         }}
         return nil
     }
@@ -274,7 +274,7 @@ struct ChatLayoutAnalyzer {
                         let contrast=abs(Int(pixels[i])-Int(pixels[o]))+abs(Int(pixels[i+1])-Int(pixels[o+1]))+abs(Int(pixels[i+2])-Int(pixels[o+2]))
                         if contrast>=70 {edges += 1;sectors[index/6] += 1}
                     }
-                    if edges>=16 && sectors.allSatisfy({$0>=2}) {return (cx,cy,radius)}
+                    if edges >= (bodyAligned ? 20:16) && sectors.allSatisfy({$0 >= (bodyAligned ? 4:2)}) {return (cx,cy,radius)}
                 }
             }
         }
