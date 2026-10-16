@@ -1,8 +1,7 @@
 {
-  "version": "0.4",
-  "display_name": "オカマ読み上げスッキリアプリ",
-  "source_commit": "34984e6092e073a2fa586e132a7b7acc28654372",
-  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38822602092",
+  "version": "0.5",
+  "source_commit": "b2d18fc78c6d7f17492c9c67609476be03b37359",
+  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38828474880",
   "conclusion": "success",
   "steps": [
     {
@@ -31,10 +30,14 @@
     },
     {
       "name": "Native floral home simulator smoke test",
-      "conclusion": "skipped"
+      "conclusion": "success"
     },
     {
       "name": "Build unsigned iPhone device binaries",
+      "conclusion": "success"
+    },
+    {
+      "name": "Publish downloadable unsigned IPA",
       "conclusion": "success"
     },
     {
@@ -48,32 +51,46 @@
   ],
   "tests": {
     "comment_and_queue": 32,
-    "layout_and_budget": 28,
-    "native_Vision_checks": 28,
+    "legacy_layout_and_budget": 28,
+    "structural_classification": 13,
+    "native_Vision_checks": 31,
     "replay_frames": 24,
-    "configuration": "passed",
-    "legacy_compiler": "Official Swift 5.7.2 Linux: core/layout/replay/configuration passed; UIKit sources parsed only. Full Xcode14.2 build not performed.",
-    "native_images": "Generated fixtures, including gray bubbles with white Japanese text; not actual live GRAVITY screenshots."
+    "configuration_and_resigned_extension_discovery": "passed",
+    "legacy_compiler": "Official Swift 5.7.2 Linux: common logic executed successfully. Full Xcode14.2 iOS build not run.",
+    "fixtures": "Generated screenshots, not live GRAVITY footage."
+  },
+  "icon": {
+    "slots": 18,
+    "format": "RGB PNG without alpha",
+    "compiled_AppIcon_and_Assets_car": "verified in downloaded device IPA"
   },
   "UI_smoke": {
-    "ci_url": "https://github.com/nyokki519/POPI/actions/runs/38822141196",
-    "source_commit": "a61a395ad5d40b8d21884eb6a5ca1516e455ef31",
-    "result": "SE3 simulator install, launch and screenshot passed. UI source unchanged since this run.",
-    "preview": "preview-v0.4.jpg",
-    "sha256": "60524c5cb771fa6287214f4252060f0a58a80e5392658ad99d5e934629cdfc4f"
+    "ci_url": "https://github.com/nyokki519/POPI/actions/runs/38847133639",
+    "source_commit": "a6975026498af0cc1ae92a0d439ead0f9ee87a64",
+    "device": "SE3 simulator",
+    "result": "App process survived 12 seconds; re-foregrounded; screenshot visually confirmed actual floral app home.",
+    "preview": "preview-v0.5.jpg",
+    "sha256": "f1c6f58a1ad0bf4505c6a9509a15a4bce6f225db88deed783b24eed1c75172ed",
+    "note": "Earlier 3-second capture showed SpringBoard; this follow-up verifies app screen. Runtime app source unchanged since full device/OCR run."
   },
-  "changes": [
-    "Gray and muted chat surfaces with avatar/geometry checks",
-    "Dark keyboard row exclusion",
-    "Selected-image diagnosis using same frame processor; manual speech tests",
-    "Periodic count-only diagnostics, including zero counts"
-  ],
-  "startup": "Original silent baseline preserved; empty-screen arming was rejected because non-room screens cannot be distinguished reliably.",
+  "windows_IPA": {
+    "bytes": 6657528,
+    "sha256": "46b4e5a7457b22f6b596710d86acd0e5c5734bbe7b22088da1193c9a631635a9",
+    "version": "0.5",
+    "arm64_app_and_upload": true,
+    "icon_catalog": true,
+    "signature": "unsigned; AltStore re-signing and Windows installation not tested"
+  },
   "not_tested": [
-    "Live GRAVITY recognition and background audio on a real iPhone",
-    "Real user photo selection interaction and diagnostic speech audibility",
-    "Signed installation on user phones",
-    "Real device memory/CPU/thermal performance",
-    "All paid avatar/bubble styles or future iOS releases"
+    "Live GRAVITY recognition, audibility and load on a real iPhone",
+    "Windows AltServer/AltStore installation and Apple signing",
+    "Real photo-picker interaction and diagnostic audio audibility",
+    "All paid decorations, all devices, future iOS releases"
+  ],
+  "limitations": [
+    "Unrecognized names or obscured images may drop messages",
+    "Official content with the identical image/name/body layout may be indistinguishable",
+    "Initial screen and no-overlap transitions remain silent",
+    "Broad OCR may cost more CPU than the previous crop-only path"
   ]
 }
