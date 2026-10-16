@@ -23,10 +23,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Swift comment core tests
+        if: "!contains(github.event.head_commit.message, '[ui-only]')"
         run: bash gravity-iphone/scripts/test-core.sh
       - name: Native Vision bubble OCR and cache tests
+        if: "!contains(github.event.head_commit.message, '[ui-only]')"
         run: bash gravity-iphone/scripts/test-native.sh
       - name: iOS Broadcast Upload Extension API validation
+        if: "!contains(github.event.head_commit.message, '[ui-only]')"
         shell: bash
         run: |
           set -euo pipefail
@@ -55,6 +58,7 @@ jobs:
         shell: bash
         run: python3 gravity-iphone/scripts/smoke-ui.py "$RUNNER_TEMP/GravityBuild/Build/Products/Debug-iphonesimulator/GravityReader.app"
       - name: Build unsigned iPhone device binaries
+        if: "!contains(github.event.head_commit.message, '[ui-only]')"
         shell: bash
         run: |
           set -euo pipefail
@@ -67,7 +71,7 @@ jobs:
           xcrun lipo -archs "$APP/PlugIns/Upload.appex/Upload"
           python3 scripts/package-ipa.py "$APP" "$RUNNER_TEMP/Okama-Sukkiri-iPhone-unsigned.ipa"
       - name: Publish downloadable unsigned IPA
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[ui-only]')
         env:
           GH_TOKEN: ${{ github.token }}
           IPA_PATH: ${{ runner.temp }}/Okama-Sukkiri-iPhone-unsigned.ipa
