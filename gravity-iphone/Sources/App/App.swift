@@ -44,7 +44,7 @@ final class ReaderViewController:UIViewController {
         let status=label("自分だけに読み上げ",size:12,weight:.bold,color:pink)
         let heading=label("おしゃべりを、聞こう。",size:23,weight:.bold,color:ink)
         heading.accessibilityTraits.insert(.header)
-        let description=label("左のアイコン・名前・本文の並びを見つけて、コメント本文を読み上げます。",size:14,weight:.regular,color:ink.withAlphaComponent(0.78))
+        let description=label("左のアイコンと本文の組み合わせを見つけて、コメント本文を読み上げます。",size:14,weight:.regular,color:ink.withAlphaComponent(0.78))
         let startTitle=label("画面配信をはじめる",size:17,weight:.bold,color:.white)
         let startHelp=label("右の配信ボタンをタップ",size:12,weight:.regular,color:UIColor.white.withAlphaComponent(0.88))
         let startLabels=UIStackView(arrangedSubviews:[startTitle,startHelp]);startLabels.axis = .vertical;startLabels.spacing=5
@@ -70,11 +70,11 @@ final class ReaderViewController:UIViewController {
             let row=UIStackView(arrangedSubviews:[index,label(text,size:13,weight:.medium,color:ink.withAlphaComponent(0.85))]);row.alignment = .top;row.spacing=12;steps.addArrangedSubview(row)
         }
         content.addArrangedSubview(card(steps,color:UIColor(red:1,green:0.94,blue:0.96,alpha:0.95)))
-        let note=label("最初に表示されたコメントは読みません。\n停止はiPhoneの画面配信表示から。",size:12,weight:.medium,color:UIColor.white.withAlphaComponent(0.94))
+        let note=label("開始時は最新のコメント1件を読みます。\n停止はiPhoneの画面配信表示から。",size:12,weight:.medium,color:UIColor.white.withAlphaComponent(0.94))
         content.addArrangedSubview(note)
         let privacy=label("画面・コメントの保存や送信はしません。\nイヤホン推奨。ルームへの音声送出は未対応です。\n装飾やテーマにより認識できない場合があります。",size:11,weight:.regular,color:UIColor.white.withAlphaComponent(0.80))
         content.addArrangedSubview(privacy)
-        content.addArrangedSubview(label("PRIVATE ・ v0.5",size:10,weight:.semibold,color:UIColor.white.withAlphaComponent(0.60)))
+        content.addArrangedSubview(label("PRIVATE ・ v0.6",size:10,weight:.semibold,color:UIColor.white.withAlphaComponent(0.60)))
         // No animated background. Release the decoded photograph while GRAVITY is
         // foreground; the broadcast extension never bundles or loads this asset.
         observers.append(NotificationCenter.default.addObserver(forName:UIApplication.didEnterBackgroundNotification,object:nil,queue:.main) { [weak self] _ in self?.photograph.image=nil })

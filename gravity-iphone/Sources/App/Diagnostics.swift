@@ -86,7 +86,7 @@ final class DiagnosticsViewController:UIViewController,PHPickerViewControllerDel
                     DispatchQueue.main.async { [weak self] in
                         guard let self=self,self.generation.isCurrent(token),self.viewIfLoaded?.window != nil else {return}
                         self.preview.image=annotated;self.body.text=recognized;self.text=recognized
-                        if candidates==0 {self.status.text=textRows==0 ? "画面の文字を認識できませんでした。":"文字は\(textRows)行認識しましたが、アイコン・名前・本文の並びを見つけられませんでした。"}
+                        if candidates==0 {self.status.text=textRows==0 ? "画面の文字を認識できませんでした。":"文字は\(textRows)行認識しましたが、アイコンと本文の組み合わせを見つけられませんでした。"}
                         else if rows.isEmpty {self.status.text="発言は\(candidates)件検出しましたが、文字を認識できませんでした。"}
                         else {self.status.text="画面の文字\(textRows)行／発言\(rows.count)件。緑枠が認識した本文です。試し読みで音声も確認できます。"}
                     }

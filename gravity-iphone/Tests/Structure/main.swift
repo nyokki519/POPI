@@ -21,7 +21,8 @@ for c:(UInt8,UInt8,UInt8) in [(210,20,160),(10,140,240),(0,0,0),(25,95,120)] {
 }
 check("square photo avatar accepted",analyzer.structuralMessages(in:image(true,square:true),lines:words).count==1)
 check("bubble and username without image excluded",analyzer.structuralMessages(in:image(false),lines:words).isEmpty)
-check("image and announcement without username excluded",analyzer.structuralMessages(in:image(),lines:[words[1]]).isEmpty)
+check("avatar-backed body survives missing username",analyzer.structuralMessages(in:image(),lines:[words[1]]).map{$0.text}==["こんばんは〜"])
+check("missing-name square photo body retained",analyzer.structuralMessages(in:image(true,square:true),lines:[words[1]]).map{$0.text}==["こんばんは〜"])
 check("username without body excluded",analyzer.structuralMessages(in:image(),lines:[words[0]]).isEmpty)
 check("right seat texts excluded",analyzer.structuralMessages(in:image(),lines:[line("太郎",0.84,0.37),line("こんにちは",0.84,0.44)]).isEmpty)
 check("input text excluded",analyzer.structuralMessages(in:image(),lines:words+[line("メッセージを送信",0.16,0.94)]).map{$0.text}==["こんばんは〜"])
@@ -40,4 +41,7 @@ for tone:UInt8 in [55,250] {
  keyboard=LayoutRaster(width:w,height:h,rgba:bytes)
  check("structural keyboard exclusion tone \(tone)",analyzer.structuralMessages(in:keyboard,lines:[line("太郎",0.16,0.55),line("あいうえお",0.16,0.64)]).isEmpty)
 }
+check("missing-name multiline body stays one message",analyzer.structuralMessages(in:image(),lines:[words[1],line("また来ます",0.16,0.475)]).first?.text=="こんばんは〜 また来ます")
+check("wide body retained",analyzer.structuralMessages(in:image(),lines:[words[0],line("幅の広いコメント",0.16,0.44,0.65)]).count==1)
+check("own application controls excluded",analyzer.structuralMessages(in:image(),lines:[words[0],line("おしゃべりを、聞こう。",0.16,0.44),line("画面配信をはじめる",0.16,0.475)]).isEmpty)
 print("RESULT \(checks-failures)/\(checks) passed");exit(failures==0 ? 0:1)

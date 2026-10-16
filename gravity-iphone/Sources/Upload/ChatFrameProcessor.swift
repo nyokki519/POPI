@@ -33,7 +33,7 @@ final class ChatFrameProcessor {
             let raster=Self.raster(thumbnail) else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now,textRows:0)}
         // Broad left/central room area. Structural classification below, rather
         // than this ROI alone, decides whether any recognized words can be read.
-        let roi=ChatRegion(x:0.015,y:0.17,width:0.80,height:0.72)
+        let roi=ChatRegion(x:0.015,y:0.17,width:0.88,height:0.72)
         let key=fingerprint(raster,roi)
         if let cached=cache[key] {return ChatFrameResult(messages:cached.messages,bubbles:cached.messages.count,recognitions:0,capturedAt:now,textRows:cached.textRows)}
         let rect=CGRect(x:roi.x*extent.width,y:(1-roi.y-roi.height)*extent.height,width:roi.width*extent.width,height:roi.height*extent.height)

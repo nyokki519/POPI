@@ -5,7 +5,7 @@ import ImageIO
 import Foundation
 var failures=0
 func check(_ name:String,_ condition:Bool) {print("\(condition ? "PASS":"FAIL") \(name)");if !condition {failures += 1;print("::error::"+name)}}
-func room(width:Int,height:Int,withAvatar:Bool=true,comment:String="こんばんは",keyboard:Bool=false,three:Bool=false,tint:CGFloat=0.98,bubbleColor:CGColor?=nil,whiteText:Bool=false)->CIImage {
+func room(width:Int,height:Int,withAvatar:Bool=true,withName:Bool=true,comment:String="こんばんは",keyboard:Bool=false,three:Bool=false,tint:CGFloat=0.98,bubbleColor:CGColor?=nil,whiteText:Bool=false)->CIImage {
     let color=CGColorSpaceCreateDeviceRGB()
     let cg=CGContext(data:nil,width:width,height:height,bitsPerComponent:8,bytesPerRow:width*4,space:color,bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue)!
     let w=CGFloat(width),h=CGFloat(height)
@@ -17,7 +17,7 @@ func room(width:Int,height:Int,withAvatar:Bool=true,comment:String="こんばん
         cg.textPosition=CGPoint(x:x*w,y:(1-y)*h);CTLineDraw(line,cg)
     }
     rect(0,0,1,1,CGColor(red:0.10,green:0.38,blue:0.48,alpha:1))
-    text("テスト太郎",0.16,0.395)
+    if withName {text("テスト太郎",0.16,0.395)}
     rect(0.16,0.42,0.55,comment.contains("\n") ? 0.14:0.075,bubbleColor ?? CGColor(gray:tint,alpha:1))
     for (index,line) in comment.components(separatedBy:"\n").enumerated() {text(line,0.185,0.468+CGFloat(index)*0.035)}
     if withAvatar {cg.setFillColor(CGColor(red:0.86,green:0.67,blue:0.78,alpha:1));cg.fillEllipse(in:CGRect(x:0.047*w,y:(1-0.395)*h-0.043*w,width:0.086*w,height:0.086*w))}
@@ -79,6 +79,16 @@ for color in [CGColor(red:0.8,green:0.05,blue:0.6,alpha:1),CGColor(red:0.02,gree
  let sample=room(width:1170,height:2532,bubbleColor:color,whiteText:true)
  let result=try ChatFrameProcessor().process(sample,orientation:.up)
  check("colored or unoutlined body OCR, actual \(result.messages?.map{$0.text} ?? [])",result.messages?.first?.text.replacingOccurrences(of:" ",with:"")=="こんばんは")
+}
+for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
+ let processor=ChatFrameProcessor()
+ let sample=room(width:w,height:h,withName:false,comment:"こんばんは\nまた来ます")
+ let frame=try processor.process(sample,orientation:.up)
+ let text=frame.messages?.first?.text.replacingOccurrences(of:" ",with:"") ?? ""
+ check("missing name native multiline \(w)x\(h)",frame.messages?.count==1 && text.contains("こんばんは") && text.contains("また来ます"))
+ let detector=CommentDetector(filterSystemLabels:false,liveMode:true)
+ _=detector.ingest(frame.messages ?? [],now:0)
+ check("native selected message reaches live speech candidates",detector.ingest(frame.messages ?? [],now:1).count==1)
 }
 print("Native Vision tests: \(failures==0 ? "PASS":"FAIL") — generated test images, not a GRAVITY recording")
 exit(failures==0 ? 0:1)

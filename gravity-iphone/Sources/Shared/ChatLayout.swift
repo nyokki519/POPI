@@ -82,6 +82,9 @@ struct ChatLayoutAnalyzer {
             l.confidence>=0.2 && l.x.isFinite && l.y.isFinite && l.width.isFinite && l.height.isFinite &&
             l.x>=0 && l.y>=0 && l.width>0 && l.height>0 && l.x+l.width<=1.01 && l.y+l.height<=1.01 && !normalizeComment(l.text).isEmpty
         }.sorted {$0.y == $1.y ? $0.x<$1.x:$0.y<$1.y}
+        let labels=sorted.map {normalizeComment($0.text)}.joined(separator:" ")
+        if (labels.contains("おしゃべり") && labels.contains("画面配信")) ||
+           (labels.contains("スクリーンショットを選ぶ") && labels.contains("認識した本文")) {return []}
         // Repeated small key surfaces identify a keyboard independently of OCR
         // spelling. A local color-distance flood has no preferred palette.
         let patches=colorPatches(raster)
@@ -118,7 +121,7 @@ struct ChatLayoutAnalyzer {
                 guard line.y>=name.y+name.height*0.9,
                     line.y-name.y<=0.27*vh/Double(h),bottom<min(keyTop,oy+vh*0.89),
                     line.x>=name.x-0.035*vw/Double(w),line.x<=name.x+0.18*vw/Double(w),
-                    x>=0.10,(line.x+line.width)*Double(w)<=ox+vw*0.80 else {continue}
+                    x>=0.10,(line.x+line.width)*Double(w)<=ox+vw*0.90 else {continue}
                 if let last=body.last {
                     if line.y-last.y-last.height>0.045*vh/Double(h) {break}
                 } else if line.y-name.y-name.height>0.12*vh/Double(h) {break}
@@ -130,6 +133,31 @@ struct ChatLayoutAnalyzer {
             let text=body.map{normalizeComment($0.text)}.joined(separator:" ")
             messages.append(OCRLine(text:text,confidence:1,x:x,y:y,width:right-x,height:bottom-y))
         }
+        // A name is helpful, never mandatory. Attach remaining OCR rows to
+        // the nearest image above-left, independently of bubble palette.
+        var fallback:[(OCRLine,(Int,Int,Int))]=[]
+        for (index,line) in sorted.enumerated() {
+            if nameIndices.contains(index) {continue}
+            let x=line.x*Double(w),y=line.y*Double(h)
+            let bottom=(line.y+line.height)*Double(h)
+            guard (x-ox)/vw>=0.11,(x-ox)/vw<=0.50,(y-oy)/vh>=0.30,
+                bottom<min(keyTop,oy+vh*0.89),(line.x+line.width)*Double(w)<=ox+vw*0.90 else {continue}
+            if messages.contains(where:{line.y>=($0.y-0.005) && line.y+line.height<=($0.y+$0.height+0.005)}) {continue}
+            let rect=Component(x:Int(x),y:Int(y),maxX:Int((line.x+line.width)*Double(w)),maxY:Int(bottom),area:0)
+            guard let anchor=avatarAnchor(leftOf:rect,viewport:viewport,pixels:pixels,w:w,h:h,bodyAligned:true) ?? imagePatchAnchor(beside:rect,viewport:viewport,raster:raster,bodyAligned:true) else {continue}
+            if let last=fallback.last,abs(last.1.0-anchor.0)<=anchor.2,
+                abs(last.1.1-anchor.1)<=anchor.2,
+                line.y-last.0.y-last.0.height<=0.045*vh/Double(h),
+                line.y-last.0.y<=0.27*vh/Double(h) {
+                let joined=last.0
+                let left=min(joined.x,line.x),right=max(joined.x+joined.width,line.x+line.width)
+                fallback[fallback.count-1]=(OCRLine(text:joined.text+" "+normalizeComment(line.text),confidence:1,x:left,y:joined.y,width:right-left,height:line.y+line.height-joined.y),anchor)
+            } else {
+                fallback.append((OCRLine(text:normalizeComment(line.text),confidence:1,x:line.x,y:line.y,width:line.width,height:line.height),anchor))
+            }
+        }
+        messages.append(contentsOf:fallback.map{$0.0})
+        messages.sort {$0.y<$1.y}
         return Array(messages.suffix(10))
     }
     private func colorPatches(_ raster:LayoutRaster)->[Component] {
@@ -152,20 +180,24 @@ struct ChatLayoutAnalyzer {
         return result
     }
     private func hasImagePatch(beside name:Component,viewport:Component,raster:LayoutRaster)->Bool {
+        imagePatchAnchor(beside:name,viewport:viewport,raster:raster) != nil
+    }
+    private func imagePatchAnchor(beside name:Component,viewport:Component,raster:LayoutRaster,bodyAligned:Bool=false)->(Int,Int,Int)? {
         // Image texture plus edges on three sides admits square / heavily
         // decorated photos without accepting a nearby text stroke alone.
         let w=raster.width,h=raster.height,bytes=raster.rgba
         let r=max(4,Int(Double(viewport.width)*0.035))
         let minX=max(viewport.x+r,name.x-Int(Double(viewport.width)*0.18))
         let maxX=name.x-r-2
-        let minY=max(r,name.y-r/2),maxY=min(h-r-2,name.maxY+r/2)
-        guard minX<=maxX,minY<=maxY else {return false}
+        let minY=max(r,bodyAligned ? name.y-r*4:name.y-r/2)
+        let maxY=min(h-r-2,bodyAligned ? name.y-r/2:name.maxY+r/2)
+        guard minX<=maxX,minY<=maxY else {return nil}
         func difference(_ x:Int,_ y:Int,_ a:Int,_ b:Int)->Int {
             guard x>=0,y>=0,a>=0,b>=0,x<w,a<w,y<h,b<h else {return 0}
             let p=(y*w+x)*4,q=(b*w+a)*4
             return abs(Int(bytes[p])-Int(bytes[q]))+abs(Int(bytes[p+1])-Int(bytes[q+1]))+abs(Int(bytes[p+2])-Int(bytes[q+2]))
         }
-        for cy in stride(from:minY,through:maxY,by:3) {for cx in stride(from:minX,through:maxX,by:3) {
+        for cy in stride(from:maxY,through:minY,by:-3) {for cx in stride(from:minX,through:maxX,by:3) {
             var sides=0,texture=0
             for d in [-r/2,0,r/2] {
                 if difference(cx-r/2,cy+d,cx-r-2,cy+d)>60 {sides |= 1}
@@ -174,9 +206,9 @@ struct ChatLayoutAnalyzer {
                 if difference(cx+d,cy+r/2,cx+d,cy+r+2)>60 {sides |= 8}
                 if difference(cx-r/2,cy+d,cx+r/2,cy+d)>40 {texture += 1}
             }
-            if sides.nonzeroBitCount>=3,texture>=2 {return true}
+            if sides.nonzeroBitCount>=3,texture>=2 {return (cx,cy,r)}
         }}
-        return false
+        return nil
     }
     private func components(w:Int,h:Int,include:(Int)->Bool)->[Component] {
         var visited=Array(repeating:UInt8(0),count:w*h),pending:[Int]=[],result:[Component]=[]
@@ -199,6 +231,9 @@ struct ChatLayoutAnalyzer {
         return result
     }
     private func hasAvatar(leftOf bubble:Component,viewport:Component,pixels:[UInt8],w:Int,h:Int,nameAligned:Bool=false)->Bool {
+        avatarAnchor(leftOf:bubble,viewport:viewport,pixels:pixels,w:w,h:h,nameAligned:nameAligned) != nil
+    }
+    private func avatarAnchor(leftOf bubble:Component,viewport:Component,pixels:[UInt8],w:Int,h:Int,nameAligned:Bool=false,bodyAligned:Bool=false)->(Int,Int,Int)? {
         let minRadius=max(3,Int(Double(viewport.width)*0.029))
         let maxRadius=max(minRadius,Int(Double(viewport.width)*0.058))
         for radius in stride(from:minRadius,through:maxRadius,by:2) {
@@ -219,12 +254,12 @@ struct ChatLayoutAnalyzer {
                 let outerY:Int=Int((yAtRadius*1.35).rounded())
                 offsets.append((innerX,innerY,outerX,outerY))
             }
-            let minX=max(viewport.x+radius,Int(Double(bubble.x)-Double(radius)*3.1))
+            let minX=max(viewport.x+radius,Int(Double(bubble.x)-Double(radius)*(bodyAligned ? 4.5:3.1)))
             let maxX=min(bubble.x-radius-2,viewport.x+Int(Double(viewport.width)*0.22))
-            let minY=nameAligned ? max(radius,bubble.y-radius/2):max(radius,Int(Double(bubble.y)-Double(radius)*2.7))
-            let maxY=min(h-radius-1,(nameAligned ? bubble.maxY:bubble.y)+radius/2)
+            let minY=nameAligned ? max(radius,bubble.y-radius/2):max(radius,Int(Double(bubble.y)-Double(radius)*(bodyAligned ? 4.0:2.7)))
+            let maxY=min(h-radius-1,bodyAligned ? bubble.y-radius/2:(nameAligned ? bubble.maxY:bubble.y)+radius/2)
             guard minX<=maxX,minY<=maxY else {continue}
-            for cy in stride(from:minY,through:maxY,by:2) {
+            for cy in stride(from:maxY,through:minY,by:-2) {
                 for cx in stride(from:minX,through:maxX,by:2) {
                     var edges=0,sectors=[0,0,0,0]
                     for (index,offset) in offsets.enumerated() {
@@ -234,11 +269,11 @@ struct ChatLayoutAnalyzer {
                         let contrast=abs(Int(pixels[i])-Int(pixels[o]))+abs(Int(pixels[i+1])-Int(pixels[o+1]))+abs(Int(pixels[i+2])-Int(pixels[o+2]))
                         if contrast>=70 {edges += 1;sectors[index/6] += 1}
                     }
-                    if edges>=16 && sectors.allSatisfy({$0>=2}) {return true}
+                    if edges>=16 && sectors.allSatisfy({$0>=2}) {return (cx,cy,radius)}
                 }
             }
         }
-        return false
+        return nil
     }
 }
 

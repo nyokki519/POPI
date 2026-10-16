@@ -4,7 +4,7 @@ import AVFoundation
 import ImageIO
 import CoreImage
 final class SampleHandler:RPBroadcastSampleHandler {
-    private var detector=CommentDetector(filterSystemLabels:false)
+    private var detector=CommentDetector(filterSystemLabels:false,liveMode:true)
     private let processor=ChatFrameProcessor()
     private var budget=RecognitionBudget()
     private var configuration=ReaderConfiguration()
@@ -33,15 +33,17 @@ final class SampleHandler:RPBroadcastSampleHandler {
             do {
                 let result=try processor.process(CIImage(cvPixelBuffer:pixels),orientation:orientation)
                 failures=0
+                var freshCount=0
                 if let lines=result.messages {
-                    let comments=detector.ingest(lines)
+                    let comments=detector.ingest(lines,now:result.capturedAt)
+                    freshCount=comments.count
                     if !comments.isEmpty {DispatchQueue.main.async { [weak self] in self?.speaker.enqueue(comments,time:result.capturedAt) }}
                 }
                 // Periodic zero counts distinguish missed shapes from failed OCR.
                 // No screenshot, username, or recognized text is logged.
                 if now-lastDiagnostic>=10 {
                     lastDiagnostic=now
-                    NSLog("GravityReader bubbles=%d OCR=%d rows=%d pending=%d latencyMs=%.0f",result.bubbles,result.recognitions,result.textRows,result.messages==nil ? 1:0,(ProcessInfo.processInfo.systemUptime-now)*1000)
+                    NSLog("GravityReader bubbles=%d OCR=%d rows=%d fresh=%d latencyMs=%.0f",result.bubbles,result.recognitions,result.textRows,freshCount,(ProcessInfo.processInfo.systemUptime-now)*1000)
                 }
             } catch {
                 failures += 1
@@ -68,6 +70,7 @@ private final class PrivateSpeaker:NSObject,AVSpeechSynthesizerDelegate {
     func enqueue(_ comments:[String],time:Double) {
         guard active else {return}
         for text in comments {queue.enqueue(text,now:time)}
+        NSLog("GravityReader speech enqueued=%d queued=%d dropped=%d",comments.count,queue.count,queue.dropped)
         speakNext()
     }
     private func speakNext() {
@@ -76,5 +79,7 @@ private final class PrivateSpeaker:NSObject,AVSpeechSynthesizerDelegate {
         synth.speak(utterance)
     }
     func stop() {active=false;queue.clear();synth.stopSpeaking(at:.immediate);try? AVAudioSession.sharedInstance().setActive(false,options:.notifyOthersOnDeactivation)}
-    func speechSynthesizer(_ synthesizer:AVSpeechSynthesizer,didFinish utterance:AVSpeechUtterance) {DispatchQueue.main.async { [weak self] in self?.speakNext() }}
+    func speechSynthesizer(_ synthesizer:AVSpeechSynthesizer,didStart utterance:AVSpeechUtterance) {NSLog("GravityReader speech started")}
+    func speechSynthesizer(_ synthesizer:AVSpeechSynthesizer,didCancel utterance:AVSpeechUtterance) {NSLog("GravityReader speech cancelled")}
+    func speechSynthesizer(_ synthesizer:AVSpeechSynthesizer,didFinish utterance:AVSpeechUtterance) {NSLog("GravityReader speech finished");DispatchQueue.main.async { [weak self] in self?.speakNext() }}
 }

@@ -20,19 +20,22 @@ final class CommentDetector {
     private var previous: [String]?
     private var candidate: [String] = []
     private var counts: [Int] = []
+    private let liveMode:Bool
+    private var recent:[(String,Double)]=[]
     private let filterSystemLabels:Bool
     private let ignoreWords: [String]
     private let systemPattern = try! NSRegularExpression(pattern:
         "^(?:.+(?:が入室しました|が退出しました|が参加しました|が退室しました)|[0-9]{1,2}:[0-9]{2})$")
     private let systemLabels: Set<String> = ["コメントを入力", "コメントする", "メッセージを入力", "送信", "GRAVITY"]
 
-    init(ignoreWords: [String] = [], filterSystemLabels:Bool=true) {
+    init(ignoreWords: [String] = [], filterSystemLabels:Bool=true,liveMode:Bool=false) {
+        self.liveMode=liveMode
         self.filterSystemLabels=filterSystemLabels
         self.ignoreWords = ignoreWords.map(normalizeComment).filter { !$0.isEmpty }
     }
 
     func reset() {
-        previous = nil; candidate = []; counts = []
+        previous = nil; candidate = []; counts = []; recent=[]
     }
 
     private func isSystem(_ text: String) -> Bool {
@@ -61,14 +64,18 @@ final class CommentDetector {
         a.count == b.count && zip(a,b).allSatisfy { equivalent($0.0,$0.1) }
     }
 
-    func ingest(_ lines: [OCRLine]) -> [String] {
+    func ingest(_ lines: [OCRLine],now:Double=ProcessInfo.processInfo.systemUptime) -> [String] {
         let sorted = lines.filter { $0.confidence >= 0.55 }
             .sorted { $0.y == $1.y ? $0.x<$1.x : $0.y<$1.y }
         // Keep OCR rows explicit: do not guess usernames or merge two comments.
         let screen = Array(sorted.map { String(normalizeComment($0.text).prefix(1000)) }
             .filter { !$0.isEmpty && !isSystem($0) }.suffix(60))
         guard !screen.isEmpty else { candidate=[]; counts=[]; return [] }
-        guard let old=previous else { previous=screen; return [] }
+        recent.removeAll {now-$0.1>20}
+        guard let old=previous else {
+            if liveMode {return confirmLatest(screen,now:now)}
+            previous=screen; return []
+        }
         if sameScreen(old,screen) { previous=screen;candidate=[];counts=[];return [] }
         // LCS preserves occurrence counts. Only suffix after last overlap is new.
         var dp=Array(repeating:Array(repeating:0,count:screen.count+1),count:old.count+1)
@@ -77,7 +84,10 @@ final class CommentDetector {
                 dp[i][j] = equivalent(old[i],screen[j]) ? 1+dp[i+1][j+1] : max(dp[i+1][j],dp[i][j+1])
             }
         }
-        guard dp[0][0]>0 else { previous=screen;candidate=[];counts=[];return [] } // No overlap: rebase rather than replay old history.
+        guard dp[0][0]>0 else {
+            if liveMode {return confirmLatest(screen,now:now)}
+            previous=screen;candidate=[];counts=[];return []
+        } // No overlap: rebase rather than replay old history.
         var i=0, j=0, lastMatch = -1
         while i<old.count && j<screen.count {
             if equivalent(old[i],screen[j]) { lastMatch=j; i += 1; j += 1 }
@@ -95,10 +105,31 @@ final class CommentDetector {
         if let last=confirmed.last {
             previous=Array(screen.prefix(lastMatch+last+2))
             candidate=Array(fresh.dropFirst(last+1));counts=Array(newCounts.dropFirst(last+1))
-            return confirmed.map{fresh[$0]}
+            let spoken=confirmed.map{fresh[$0]}
+            if liveMode {remember(screen,now:now)}
+            return spoken
         }
         candidate=fresh;counts=newCounts;return []
     }
+    private func remember(_ screen:[String],now:Double) {
+        for text in screen {
+            recent.removeAll {equivalent($0.0,text)}
+            recent.append((text,now))
+        }
+        recent=Array(recent.suffix(80))
+    }
+    private func confirmLatest(_ screen:[String],now:Double)->[String] {
+        guard let latest=screen.last else {return []}
+        if recent.contains(where:{equivalent($0.0,latest)}) {
+            previous=screen;candidate=[];counts=[];return []
+        }
+        if candidate.last.map({equivalent($0,latest)}) == true {
+            previous=screen;candidate=[];counts=[];remember(screen,now:now)
+            return [latest]
+        }
+        candidate=[latest];counts=[1];return []
+    }
+
 }
 
 struct FreshSpeechQueue {
