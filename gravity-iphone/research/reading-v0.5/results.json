@@ -1,0 +1,80 @@
+{
+  "detector" : {
+    "all_visible_text_replaced" : [
+      [
+
+      ],
+      [
+
+      ],
+      [
+
+      ],
+      [
+
+      ],
+      [
+
+      ]
+    ],
+    "appended_frames" : [
+      [
+
+      ],
+      [
+
+      ],
+      [
+        "こんにちは"
+      ]
+    ],
+    "first_arrival_after_empty" : [
+      [
+
+      ],
+      [
+
+      ],
+      [
+
+      ],
+      [
+
+      ]
+    ]
+  },
+  "expired_after_9_seconds" : true,
+  "geometry" : [
+    {
+      "case" : "name_and_body",
+      "matched_messages" : 1,
+      "recognized_body_rows" : 1
+    },
+    {
+      "case" : "name_not_recognized",
+      "matched_messages" : 0,
+      "recognized_body_rows" : 1
+    },
+    {
+      "case" : "name_confidence_019",
+      "matched_messages" : 0,
+      "recognized_body_rows" : 1
+    },
+    {
+      "case" : "name_confidence_020",
+      "matched_messages" : 1,
+      "recognized_body_rows" : 1
+    },
+    {
+      "case" : "name_box_height_006",
+      "matched_messages" : 0,
+      "recognized_body_rows" : 1
+    },
+    {
+      "case" : "body_reaches_right_081",
+      "matched_messages" : 0,
+      "recognized_body_rows" : 1
+    }
+  ],
+  "scope" : "Executed production Swift logic with synthetic OCR rows; not actual GRAVITY or iPhone audio"
+}
