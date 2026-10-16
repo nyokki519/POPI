@@ -1,7 +1,7 @@
 {
-  "version": "0.5",
-  "source_commit": "b2d18fc78c6d7f17492c9c67609476be03b37359",
-  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38828474880",
+  "version": "0.6",
+  "source_commit": "2bfd90fd05c1dc8c03d2a928093e27658782f8bb",
+  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38916527180",
   "conclusion": "success",
   "steps": [
     {
@@ -50,10 +50,10 @@
     }
   ],
   "tests": {
-    "comment_and_queue": 32,
+    "comment_and_queue": 40,
     "legacy_layout_and_budget": 28,
-    "structural_classification": 13,
-    "native_Vision_checks": 31,
+    "structural_classification": 17,
+    "native_Vision_checks": 37,
     "replay_frames": 24,
     "configuration_and_resigned_extension_discovery": "passed",
     "legacy_compiler": "Official Swift 5.7.2 Linux: common logic executed successfully. Full Xcode14.2 iOS build not run.",
@@ -65,18 +65,16 @@
     "compiled_AppIcon_and_Assets_car": "verified in downloaded device IPA"
   },
   "UI_smoke": {
-    "ci_url": "https://github.com/nyokki519/POPI/actions/runs/38847133639",
-    "source_commit": "a6975026498af0cc1ae92a0d439ead0f9ee87a64",
+    "ci_url": "https://github.com/nyokki519/POPI/actions/runs/38916527180",
     "device": "SE3 simulator",
     "result": "App process survived 12 seconds; re-foregrounded; screenshot visually confirmed actual floral app home.",
-    "preview": "preview-v0.5.jpg",
-    "sha256": "f1c6f58a1ad0bf4505c6a9509a15a4bce6f225db88deed783b24eed1c75172ed",
-    "note": "Earlier 3-second capture showed SpringBoard; this follow-up verifies app screen. Runtime app source unchanged since full device/OCR run."
+    "preview": "preview-v0.6.jpg",
+    "sha256": "74f28b042935b544fd60ce2a13d6d9a47274c84847b16dec5055fffc8089d156"
   },
   "windows_IPA": {
-    "bytes": 6657528,
-    "sha256": "46b4e5a7457b22f6b596710d86acd0e5c5734bbe7b22088da1193c9a631635a9",
-    "version": "0.5",
+    "bytes": 6668598,
+    "sha256": "59463e95ec2ad3d83820542f001fb910f7fa8b0340fe924ef8943913d311876d",
+    "version": "0.6",
     "arm64_app_and_upload": true,
     "icon_catalog": true,
     "signature": "unsigned; AltStore re-signing and Windows installation not tested"
@@ -88,9 +86,20 @@
     "All paid decorations, all devices, future iOS releases"
   ],
   "limitations": [
-    "Unrecognized names or obscured images may drop messages",
-    "Official content with the identical image/name/body layout may be indistinguishable",
-    "Initial screen and no-overlap transitions remain silent",
+    "Obscured images or unrecognized body text may drop messages",
+    "Official content with identical avatar/body layout may be indistinguishable",
+    "Startup and no-overlap transitions read only latest one after two observations",
+    "Unseen history may be read after scrolling; recently seen identical wording may be suppressed for 20 seconds",
     "Broad OCR may cost more CPU than the previous crop-only path"
-  ]
+  ],
+  "comparison": {
+    "working_audio_reference": "e38b897",
+    "preserved_audio_route": "AVAudioSession playback + mixWithOthers; main-queue AVSpeechSynthesizer",
+    "changed": "Optional-name image/body fallback; live startup and disjoint-screen detection; count-only speech delegate logs",
+    "failed_regressions_fixed": [
+      "No-name body lost",
+      "Disjoint screen silently rebased",
+      "Announcement corner mistaken for avatar in generated native fixtures"
+    ]
+  }
 }
