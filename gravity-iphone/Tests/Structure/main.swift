@@ -27,4 +27,17 @@ check("right seat texts excluded",analyzer.structuralMessages(in:image(),lines:[
 check("input text excluded",analyzer.structuralMessages(in:image(),lines:words+[line("メッセージを送信",0.16,0.94)]).map{$0.text}==["こんばんは〜"])
 let multi=words+[line("また来ます",0.16,0.475,0.3)]
 check("multiline body joined without username",analyzer.structuralMessages(in:image(),lines:multi).first?.text=="こんばんは〜 また来ます")
+// A real-looking name/image pair above a keyboard must not bless key text.
+for tone:UInt8 in [55,250] {
+ var keyboard=image();let w=keyboard.width,h=keyboard.height
+ var bytes=keyboard.rgba
+ func pixel(_ x:Int,_ y:Int,_ r:UInt8,_ g:UInt8,_ b:UInt8) {let p=(y*w+x)*4;bytes[p]=r;bytes[p+1]=g;bytes[p+2]=b}
+ for y in 308..<336 {for x in 15..<43 {pixel(x,y,220,170,200)}}
+ for row in 0..<3 {for col in 0..<9 {
+  let x=Int((0.02+Double(col)*0.108)*Double(w)),y=Int((0.60+Double(row)*0.09)*Double(h))
+  for dy in 0..<36 {for dx in 0..<27 {pixel(x+dx,y+dy,tone,tone,tone)}}
+ }}
+ keyboard=LayoutRaster(width:w,height:h,rgba:bytes)
+ check("structural keyboard exclusion tone \(tone)",analyzer.structuralMessages(in:keyboard,lines:[line("太郎",0.16,0.55),line("あいうえお",0.16,0.64)]).isEmpty)
+}
 print("RESULT \(checks-failures)/\(checks) passed");exit(failures==0 ? 0:1)

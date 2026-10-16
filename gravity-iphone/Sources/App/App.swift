@@ -44,7 +44,7 @@ final class ReaderViewController:UIViewController {
         let status=label("自分だけに読み上げ",size:12,weight:.bold,color:pink)
         let heading=label("おしゃべりを、聞こう。",size:23,weight:.bold,color:ink)
         heading.accessibilityTraits.insert(.header)
-        let description=label("左のユーザーアイコンと吹き出しを見つけて、コメント本文を読み上げます。",size:14,weight:.regular,color:ink.withAlphaComponent(0.78))
+        let description=label("左のアイコン・名前・本文の並びを見つけて、コメント本文を読み上げます。",size:14,weight:.regular,color:ink.withAlphaComponent(0.78))
         let startTitle=label("画面配信をはじめる",size:17,weight:.bold,color:.white)
         let startHelp=label("右の配信ボタンをタップ",size:12,weight:.regular,color:UIColor.white.withAlphaComponent(0.88))
         let startLabels=UIStackView(arrangedSubviews:[startTitle,startHelp]);startLabels.axis = .vertical;startLabels.spacing=5

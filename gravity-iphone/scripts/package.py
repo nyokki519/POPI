@@ -2,7 +2,7 @@
 from pathlib import Path
 import zipfile,hashlib,json
 root=Path(__file__).resolve().parents[1]
-destination=root/'dist/Okama-Sukkiri-v0.4-source.zip'
+destination=root/'dist/Okama-Sukkiri-v0.5-source.zip'
 files=sorted(p for p in root.rglob('*') if p.is_file() and 'dist' not in p.relative_to(root).parts and 'xcuserdata' not in p.relative_to(root).parts and '.DS_Store' not in p.name)
 manifest={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
 with zipfile.ZipFile(destination,'w',compression=zipfile.ZIP_DEFLATED) as z:
