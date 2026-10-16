@@ -82,12 +82,13 @@ final class DiagnosticsViewController:UIViewController,PHPickerViewControllerDel
                         }
                     }
                     let candidates=result.bubbles
+                    let textRows=result.textRows
                     DispatchQueue.main.async { [weak self] in
                         guard let self=self,self.generation.isCurrent(token),self.viewIfLoaded?.window != nil else {return}
                         self.preview.image=annotated;self.body.text=recognized;self.text=recognized
-                        if candidates==0 {self.status.text="本文枠を検出できませんでした。アイコンや吹き出しの見た目による検出失敗です。"}
-                        else if rows.isEmpty {self.status.text="本文枠は\(candidates)件検出しましたが、文字を認識できませんでした。"}
-                        else {self.status.text="本文枠\(candidates)件／文字認識\(rows.count)件。緑枠が認識した本文です。試し読みで音声も確認できます。"}
+                        if candidates==0 {self.status.text=textRows==0 ? "画面の文字を認識できませんでした。":"文字は\(textRows)行認識しましたが、アイコン・名前・本文の並びを見つけられませんでした。"}
+                        else if rows.isEmpty {self.status.text="発言は\(candidates)件検出しましたが、文字を認識できませんでした。"}
+                        else {self.status.text="画面の文字\(textRows)行／発言\(rows.count)件。緑枠が認識した本文です。試し読みで音声も確認できます。"}
                     }
                 } catch {
                     DispatchQueue.main.async { [weak self] in

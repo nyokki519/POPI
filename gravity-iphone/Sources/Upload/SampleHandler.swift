@@ -41,7 +41,7 @@ final class SampleHandler:RPBroadcastSampleHandler {
                 // No screenshot, username, or recognized text is logged.
                 if now-lastDiagnostic>=10 {
                     lastDiagnostic=now
-                    NSLog("GravityReader bubbles=%d OCR=%d rows=%d pending=%d latencyMs=%.0f",result.bubbles,result.recognitions,result.messages?.count ?? 0,result.messages==nil ? 1:0,(ProcessInfo.processInfo.systemUptime-now)*1000)
+                    NSLog("GravityReader bubbles=%d OCR=%d rows=%d pending=%d latencyMs=%.0f",result.bubbles,result.recognitions,result.textRows,result.messages==nil ? 1:0,(ProcessInfo.processInfo.systemUptime-now)*1000)
                 }
             } catch {
                 failures += 1

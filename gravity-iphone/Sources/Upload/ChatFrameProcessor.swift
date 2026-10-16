@@ -9,6 +9,7 @@ struct ChatFrameResult {
     let bubbles:Int
     let recognitions:Int
     let capturedAt:Double
+    let textRows:Int
 }
 
 /// One bounded text pass, then image/name/body association. Original ReplayKit
@@ -16,7 +17,7 @@ struct ChatFrameResult {
 final class ChatFrameProcessor {
     private let context=CIContext(options:[.cacheIntermediates:false])
     private let analyzer=ChatLayoutAnalyzer()
-    private var cache:[UInt64:[OCRLine]]=[:]
+    private var cache:[UInt64:(messages:[OCRLine],textRows:Int)]=[:]
     private var order:[UInt64]=[]
     func reset() {cache.removeAll();order.removeAll()}
     func process(_ source:CIImage,orientation:CGImagePropertyOrientation)throws->ChatFrameResult {
@@ -24,22 +25,22 @@ final class ChatFrameProcessor {
         let oriented=source.oriented(forExifOrientation:Int32(orientation.rawValue))
         let image=oriented.transformed(by:CGAffineTransform(translationX:-oriented.extent.minX,y:-oriented.extent.minY))
         let extent=image.extent
-        guard extent.width>0,extent.height>0 else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now)}
+        guard extent.width>0,extent.height>0 else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now,textRows:0)}
         let scale=min(1,640/max(extent.width,extent.height))
         let small=image.transformed(by:CGAffineTransform(scaleX:scale,y:scale))
         let tw=Int(small.extent.width),th=Int(small.extent.height)
         guard tw>=32,th>=32,let thumbnail=context.createCGImage(small,from:CGRect(x:0,y:0,width:tw,height:th)),
-            let raster=Self.raster(thumbnail) else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now)}
+            let raster=Self.raster(thumbnail) else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now,textRows:0)}
         // Broad left/central room area. Structural classification below, rather
         // than this ROI alone, decides whether any recognized words can be read.
         let roi=ChatRegion(x:0.015,y:0.17,width:0.80,height:0.72)
         let key=fingerprint(raster,roi)
-        if let messages=cache[key] {return ChatFrameResult(messages:messages,bubbles:messages.count,recognitions:0,capturedAt:now)}
+        if let cached=cache[key] {return ChatFrameResult(messages:cached.messages,bubbles:cached.messages.count,recognitions:0,capturedAt:now,textRows:cached.textRows)}
         let rect=CGRect(x:roi.x*extent.width,y:(1-roi.y-roi.height)*extent.height,width:roi.width*extent.width,height:roi.height*extent.height)
         let cropped=image.cropped(to:rect).transformed(by:CGAffineTransform(translationX:-rect.minX,y:-rect.minY))
         let downscale=min(1,1280/max(rect.width,rect.height),sqrt(400_000/(rect.width*rect.height)))
         let limited=cropped.transformed(by:CGAffineTransform(scaleX:downscale,y:downscale))
-        guard let cg=context.createCGImage(limited,from:limited.extent) else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now)}
+        guard let cg=context.createCGImage(limited,from:limited.extent) else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now,textRows:0)}
         let request=VNRecognizeTextRequest();request.recognitionLevel = .accurate
         request.recognitionLanguages=["ja-JP","en-US"];request.usesLanguageCorrection=true
         request.minimumTextHeight=0.009
@@ -50,9 +51,9 @@ final class ChatFrameProcessor {
             return OCRLine(text:candidate.string,confidence:Double(candidate.confidence),x:roi.x+box.minX*roi.width,y:roi.y+(1-box.maxY)*roi.height,width:box.width*roi.width,height:box.height*roi.height)
         }
         let messages=analyzer.structuralMessages(in:raster,lines:lines)
-        cache[key]=messages;order.append(key)
+        cache[key]=(messages:messages,textRows:lines.count);order.append(key)
         if order.count>12 {cache.removeValue(forKey:order.removeFirst())}
-        return ChatFrameResult(messages:messages,bubbles:messages.count,recognitions:1,capturedAt:now)
+        return ChatFrameResult(messages:messages,bubbles:messages.count,recognitions:1,capturedAt:now,textRows:lines.count)
     }
     private static func raster(_ image:CGImage)->LayoutRaster? {
         let w=image.width,h=image.height
