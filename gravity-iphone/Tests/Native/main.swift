@@ -17,6 +17,7 @@ func room(width:Int,height:Int,withAvatar:Bool=true,comment:String="こんばん
         cg.textPosition=CGPoint(x:x*w,y:(1-y)*h);CTLineDraw(line,cg)
     }
     rect(0,0,1,1,CGColor(red:0.10,green:0.38,blue:0.48,alpha:1))
+    text("テスト太郎",0.16,0.395)
     rect(0.16,0.42,0.55,comment.contains("\n") ? 0.14:0.075,CGColor(gray:tint,alpha:1))
     for (index,line) in comment.components(separatedBy:"\n").enumerated() {text(line,0.185,0.468+CGFloat(index)*0.035)}
     if withAvatar {cg.setFillColor(CGColor(red:0.86,green:0.67,blue:0.78,alpha:1));cg.fillEllipse(in:CGRect(x:0.047*w,y:(1-0.395)*h-0.043*w,width:0.086*w,height:0.086*w))}
@@ -28,6 +29,7 @@ func room(width:Int,height:Int,withAvatar:Bool=true,comment:String="こんばん
     if three {
         for (y,word) in [(CGFloat(0.58),"ありがとう"),(CGFloat(0.74),"よろしく")] {
             rect(0.16,y,0.55,0.075,CGColor(gray:y<0.7 ? tint:0.98,alpha:1))
+            text("テスト花子",0.16,y-0.025)
             text(word,0.185,y+0.048)
             cg.setFillColor(CGColor(red:0.86,green:0.67,blue:0.78,alpha:1));cg.fillEllipse(in:CGRect(x:0.047*w,y:(1-y+0.025)*h-0.043*w,width:0.086*w,height:0.086*w))
         }

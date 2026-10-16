@@ -9,10 +9,15 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: iphone-validation-and-package
+  cancel-in-progress: true
 jobs:
   ios-extension-build:
     runs-on: macos-15
     timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,3 +65,28 @@ jobs:
           test -f "$APP/PlugIns/Upload.appex/Upload"
           xcrun lipo -archs "$APP/GravityReader"
           xcrun lipo -archs "$APP/PlugIns/Upload.appex/Upload"
+          python3 scripts/package-ipa.py "$APP" "$RUNNER_TEMP/Okama-Sukkiri-iPhone-unsigned.ipa"
+      - name: Publish downloadable unsigned IPA
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IPA_PATH: ${{ runner.temp }}/Okama-Sukkiri-iPhone-unsigned.ipa
+        run: |
+          python3 - <<'PY'
+          import os,json,base64,urllib.request,urllib.error
+          from pathlib import Path
+          repo=os.environ['GITHUB_REPOSITORY']
+          url=f'https://api.github.com/repos/{repo}/contents/gravity-iphone/dist/Okama-Sukkiri-iPhone-unsigned.ipa'
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'}
+          try:
+              with urllib.request.urlopen(urllib.request.Request(url,headers=headers)) as r:previous=json.load(r)['sha']
+          except urllib.error.HTTPError as e:
+              if e.code!=404:raise
+              previous=None
+          payload={'message':'Publish unsigned iPhone IPA for Windows re-signing [skip ci]','content':base64.b64encode(Path(os.environ['IPA_PATH']).read_bytes()).decode(),'branch':'main'}
+          if previous:payload['sha']=previous
+          req=urllib.request.Request(url,data=json.dumps(payload).encode(),headers={**headers,'Content-Type':'application/json'},method='PUT')
+          with urllib.request.urlopen(req) as r:result=json.load(r)
+          print('Published unsigned IPA:',result['content']['html_url'])
+          print('Built source:',os.environ['GITHUB_SHA'])
+          PY

@@ -19,11 +19,14 @@ for p in sorted((root/'Sources').rglob('*.swift')):
     rel=str(p.relative_to(root));fileids[rel]=obj(rel,'PBXFileReference',lastKnownFileType='sourcecode.swift',path=rel,sourceTree='<group>')
 resourceids={}
 for p in sorted((root/'Resources').rglob('*.png')):
+    if any(part.endswith('.xcassets') for part in p.parts):continue
     rel=str(p.relative_to(root));resourceids[rel]=obj(rel,'PBXFileReference',lastKnownFileType='image.png',path=rel,sourceTree='<group>')
+for p in sorted((root/'Resources').glob('*.xcassets')):
+    rel=str(p.relative_to(root));resourceids[rel]=obj(rel,'PBXFileReference',lastKnownFileType='folder.assetcatalog',path=rel,sourceTree='<group>')
 for name in targetids:
     app=name=='GravityReader'
     identifier='jp.nyokki519.GravityReader'+('' if app else '.'+name)
-    info={'CFBundleDevelopmentRegion':'ja','CFBundleExecutable':'$(EXECUTABLE_NAME)','CFBundleIdentifier':'$(PRODUCT_BUNDLE_IDENTIFIER)','CFBundleInfoDictionaryVersion':'6.0','CFBundleName':'$(PRODUCT_NAME)','CFBundlePackageType':'APPL' if app else 'XPC!','CFBundleShortVersionString':'0.4','CFBundleVersion':'4','CFBundleDisplayName':'オカマ読み上げスッキリアプリ'}
+    info={'CFBundleDevelopmentRegion':'ja','CFBundleExecutable':'$(EXECUTABLE_NAME)','CFBundleIdentifier':'$(PRODUCT_BUNDLE_IDENTIFIER)','CFBundleInfoDictionaryVersion':'6.0','CFBundleName':'$(PRODUCT_NAME)','CFBundlePackageType':'APPL' if app else 'XPC!','CFBundleShortVersionString':'0.5','CFBundleVersion':'5','CFBundleDisplayName':'オカマ読み上げスッキリアプリ'}
     if app:info.update(UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationPortrait'])
     else:
         attrs={'RPBroadcastExtension':'jp.nyokki519.GravityReader.Upload'} if name=='Setup' else {'RPBroadcastProcessMode':'RPBroadcastProcessModeSampleBuffer'}
@@ -46,6 +49,7 @@ for name in targetids:
             embeds.append(obj(ext+'embed','PBXBuildFile',fileRef=ident(ext+'product'),settings={'ATTRIBUTES':['RemoveHeadersOnCopy']}))
         phases.append(obj('embed','PBXCopyFilesBuildPhase',buildActionMask='2147483647',dstPath='',dstSubfolderSpec='13',files=embeds,name='Embed App Extensions',runOnlyForDeploymentPostprocessing='0'))
     settings={'PRODUCT_NAME':name,'PRODUCT_BUNDLE_IDENTIFIER':identifier,'INFOPLIST_FILE':name+'-Info.plist','SWIFT_VERSION':'5.0','IPHONEOS_DEPLOYMENT_TARGET':'16.0','TARGETED_DEVICE_FAMILY':'1,2','CODE_SIGN_STYLE':'Automatic','SDKROOT':'iphoneos','LD_RUNPATH_SEARCH_PATHS':['$(inherited)','@executable_path/Frameworks']+([] if app else ['@executable_path/../../Frameworks'])}
+    if app:settings.update(ASSETCATALOG_COMPILER_APPICON_NAME='AppIcon')
     if not app:settings.update(APPLICATION_EXTENSION_API_ONLY='YES',SKIP_INSTALL='YES')
     targets.append(obj(name+'target','PBXNativeTarget',buildConfigurationList=configlist(name,settings),buildPhases=phases,buildRules=[],dependencies=deps,name=name,productName=name,productReference=product,productType='com.apple.product-type.'+('application' if app else 'app-extension')))
 pg=obj('products','PBXGroup',children=products,name='Products',sourceTree='<group>')

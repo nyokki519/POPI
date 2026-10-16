@@ -65,6 +65,119 @@ struct ChatLayoutAnalyzer {
         }
         return Array(found.sorted{$0.y<$1.y}.suffix(10))
     }
+    /// Text-first layout: a left image, a name row, then body rows. No bubble
+    /// fill color, circular silhouette, or closed bubble contour is required.
+    func structuralMessages(in raster:LayoutRaster,lines:[OCRLine])->[OCRLine] {
+        let w=raster.width,h=raster.height
+        guard w>=32,h>=32,w<=1024,h<=1024,raster.rgba.count==w*h*4 else {return []}
+        let pixels=raster.rgba
+        let foreground=components(w:w,h:h) {p in Int(pixels[p*4])+Int(pixels[p*4+1])+Int(pixels[p*4+2])>60}
+        let largest=foreground.max{$0.area<$1.area}
+        let viewport:Component
+        if let c=largest,c.area>w*h/5 {viewport=c}
+        else {viewport=Component(x:0,y:0,maxX:w-1,maxY:h-1,area:w*h)}
+        let vw=Double(viewport.width),vh=Double(viewport.height)
+        let ox=Double(viewport.x),oy=Double(viewport.y)
+        let sorted=lines.filter { l in
+            l.confidence>=0.2 && l.x.isFinite && l.y.isFinite && l.width.isFinite && l.height.isFinite &&
+            l.x>=0 && l.y>=0 && l.width>0 && l.height>0 && l.x+l.width<=1.01 && l.y+l.height<=1.01 && !normalizeComment(l.text).isEmpty
+        }.sorted {$0.y == $1.y ? $0.x<$1.x:$0.y<$1.y}
+        // Repeated small key surfaces identify a keyboard independently of OCR
+        // spelling. A local color-distance flood has no preferred palette.
+        let patches=colorPatches(raster)
+        let keys=patches.filter {c in
+            Double(c.y)-oy>vh*0.45 && Double(c.width)>=vw*0.04 && Double(c.width)<=vw*0.14 &&
+            Double(c.height)>=vh*0.025 && Double(c.height)<=vh*0.12
+        }
+        var rows:[[Component]]=[]
+        for key in keys.sorted(by:{$0.y<$1.y}) {
+            if let last=rows.last,let first=last.first,abs(first.y-key.y)<=max(3,Int(vh*0.012)) {rows[rows.count-1].append(key)}
+            else {rows.append([key])}
+        }
+        let keyRows=rows.filter {$0.count>=6 && ($0.map{$0.maxX}.max()! - $0.map{$0.x}.min()!)>Int(vw*0.55)}
+        let keyTop=keyRows.count>=2 ? Double(keyRows.compactMap{$0.first?.y}.min()!):Double(h)
+        let nameIndices=sorted.indices.filter {index in
+            let l=sorted[index]
+            let x=l.x*Double(w),y=l.y*Double(h)
+            guard (x-ox)/vw>=0.11,(x-ox)/vw<=0.42,(y-oy)/vh>=0.18,
+                y+l.height*Double(h)<min(keyTop,oy+vh*0.88),l.width*Double(w)<=vw*0.65,
+                l.height*Double(h)<=vh*0.055 else {return false}
+            let c=Component(x:Int(x),y:Int(y),maxX:Int((l.x+l.width)*Double(w)),maxY:Int((l.y+l.height)*Double(h)),area:0)
+            return hasAvatar(leftOf:c,viewport:viewport,pixels:pixels,w:w,h:h,nameAligned:true) ||
+                hasImagePatch(beside:c,viewport:viewport,raster:raster)
+        }
+        var messages:[OCRLine]=[]
+        for (position,index) in nameIndices.enumerated() {
+            let name=sorted[index]
+            let end=position+1<nameIndices.count ? sorted[nameIndices[position+1]].y:1.0
+            var body:[OCRLine]=[]
+            for line in sorted.dropFirst(index+1) {
+                if line.y>=end {break}
+                let x=(line.x*Double(w)-ox)/vw
+                let bottom=(line.y+line.height)*Double(h)
+                guard line.y>=name.y+name.height*0.9,
+                    line.y-name.y<=0.27*vh/Double(h),bottom<min(keyTop,oy+vh*0.89),
+                    line.x>=name.x-0.035*vw/Double(w),line.x<=name.x+0.18*vw/Double(w),
+                    x>=0.10,(line.x+line.width)*Double(w)<=ox+vw*0.80 else {continue}
+                if let last=body.last {
+                    if line.y-last.y-last.height>0.045*vh/Double(h) {break}
+                } else if line.y-name.y-name.height>0.12*vh/Double(h) {break}
+                body.append(line)
+            }
+            guard !body.isEmpty else {continue}
+            let x=body.map{$0.x}.min()!,y=body.map{$0.y}.min()!
+            let right=body.map{$0.x+$0.width}.max()!,bottom=body.map{$0.y+$0.height}.max()!
+            let text=body.map{normalizeComment($0.text)}.joined(separator:" ")
+            messages.append(OCRLine(text:text,confidence:1,x:x,y:y,width:right-x,height:bottom-y))
+        }
+        return Array(messages.suffix(10))
+    }
+    private func colorPatches(_ raster:LayoutRaster)->[Component] {
+        let w=raster.width,h=raster.height,pixels=raster.rgba
+        var visited=Array(repeating:UInt8(0),count:w*h),pending:[Int]=[],result:[Component]=[]
+        for seed in 0..<w*h where visited[seed]==0 {
+            visited[seed]=1;pending.removeAll(keepingCapacity:true);pending.append(seed)
+            let base=seed*4;var head=0,c=Component(x:seed%w,y:seed/w,maxX:seed%w,maxY:seed/w,area:0)
+            while head<pending.count {
+                let p=pending[head];head += 1;let x=p%w,y=p/w
+                c.area += 1;c.x=min(c.x,x);c.maxX=max(c.maxX,x);c.y=min(c.y,y);c.maxY=max(c.maxY,y)
+                for n in [x>0 ? p-1:-1,x+1<w ? p+1:-1,y>0 ? p-w:-1,y+1<h ? p+w:-1] where n>=0 && visited[n]==0 {
+                    let q=n*4
+                    let difference=abs(Int(pixels[q])-Int(pixels[base]))+abs(Int(pixels[q+1])-Int(pixels[base+1]))+abs(Int(pixels[q+2])-Int(pixels[base+2]))
+                    if difference<=36 {visited[n]=1;pending.append(n)}
+                }
+            }
+            if c.area>=6 {result.append(c)}
+        }
+        return result
+    }
+    private func hasImagePatch(beside name:Component,viewport:Component,raster:LayoutRaster)->Bool {
+        // Image texture plus edges on three sides admits square / heavily
+        // decorated photos without accepting a nearby text stroke alone.
+        let w=raster.width,h=raster.height,bytes=raster.rgba
+        let r=max(4,Int(Double(viewport.width)*0.035))
+        let minX=max(viewport.x+r,name.x-Int(Double(viewport.width)*0.18))
+        let maxX=name.x-r-2
+        let minY=max(r,name.y-r/2),maxY=min(h-r-2,name.maxY+r/2)
+        guard minX<=maxX,minY<=maxY else {return false}
+        func difference(_ x:Int,_ y:Int,_ a:Int,_ b:Int)->Int {
+            guard x>=0,y>=0,a>=0,b>=0,x<w,a<w,y<h,b<h else {return 0}
+            let p=(y*w+x)*4,q=(b*w+a)*4
+            return abs(Int(bytes[p])-Int(bytes[q]))+abs(Int(bytes[p+1])-Int(bytes[q+1]))+abs(Int(bytes[p+2])-Int(bytes[q+2]))
+        }
+        for cy in stride(from:minY,through:maxY,by:3) {for cx in stride(from:minX,through:maxX,by:3) {
+            var sides=0,texture=0
+            for d in [-r/2,0,r/2] {
+                if difference(cx-r/2,cy+d,cx-r-2,cy+d)>60 {sides |= 1}
+                if difference(cx+r/2,cy+d,cx+r+2,cy+d)>60 {sides |= 2}
+                if difference(cx+d,cy-r/2,cx+d,cy-r-2)>60 {sides |= 4}
+                if difference(cx+d,cy+r/2,cx+d,cy+r+2)>60 {sides |= 8}
+                if difference(cx-r/2,cy+d,cx+r/2,cy+d)>40 {texture += 1}
+            }
+            if sides.nonzeroBitCount>=3,texture>=2 {return true}
+        }}
+        return false
+    }
     private func components(w:Int,h:Int,include:(Int)->Bool)->[Component] {
         var visited=Array(repeating:UInt8(0),count:w*h),pending:[Int]=[],result:[Component]=[]
         pending.reserveCapacity(w*h)
@@ -85,7 +198,7 @@ struct ChatLayoutAnalyzer {
         }
         return result
     }
-    private func hasAvatar(leftOf bubble:Component,viewport:Component,pixels:[UInt8],w:Int,h:Int)->Bool {
+    private func hasAvatar(leftOf bubble:Component,viewport:Component,pixels:[UInt8],w:Int,h:Int,nameAligned:Bool=false)->Bool {
         let minRadius=max(3,Int(Double(viewport.width)*0.029))
         let maxRadius=max(minRadius,Int(Double(viewport.width)*0.058))
         for radius in stride(from:minRadius,through:maxRadius,by:2) {
@@ -108,8 +221,8 @@ struct ChatLayoutAnalyzer {
             }
             let minX=max(viewport.x+radius,Int(Double(bubble.x)-Double(radius)*3.1))
             let maxX=min(bubble.x-radius-2,viewport.x+Int(Double(viewport.width)*0.22))
-            let minY=max(radius,Int(Double(bubble.y)-Double(radius)*2.7))
-            let maxY=min(h-radius-1,bubble.y+radius/2)
+            let minY=nameAligned ? max(radius,bubble.y-radius/2):max(radius,Int(Double(bubble.y)-Double(radius)*2.7))
+            let maxY=min(h-radius-1,(nameAligned ? bubble.maxY:bubble.y)+radius/2)
             guard minX<=maxX,minY<=maxY else {continue}
             for cy in stride(from:minY,through:maxY,by:2) {
                 for cx in stride(from:minX,through:maxX,by:2) {

@@ -74,7 +74,7 @@ final class ReaderViewController:UIViewController {
         content.addArrangedSubview(note)
         let privacy=label("画面・コメントの保存や送信はしません。\nイヤホン推奨。ルームへの音声送出は未対応です。\n装飾やテーマにより認識できない場合があります。",size:11,weight:.regular,color:UIColor.white.withAlphaComponent(0.80))
         content.addArrangedSubview(privacy)
-        content.addArrangedSubview(label("PRIVATE ・ v0.4",size:10,weight:.semibold,color:UIColor.white.withAlphaComponent(0.60)))
+        content.addArrangedSubview(label("PRIVATE ・ v0.5",size:10,weight:.semibold,color:UIColor.white.withAlphaComponent(0.60)))
         // No animated background. Release the decoded photograph while GRAVITY is
         // foreground; the broadcast extension never bundles or loads this asset.
         observers.append(NotificationCenter.default.addObserver(forName:UIApplication.didEnterBackgroundNotification,object:nil,queue:.main) { [weak self] _ in self?.photograph.image=nil })
