@@ -13,3 +13,19 @@ struct ReaderConfiguration {
         rate=min(0.6,max(0.35,number("rate",0.5)))
     }
 }
+
+// Re-signers may rewrite host and extension identifiers differently. Read the
+// installed upload extension instead of guessing hostID + ".Upload".
+func bundledUploadIdentifier(applicationURL:URL)->String? {
+    let directory=applicationURL.appendingPathComponent("PlugIns",isDirectory:true)
+    guard let urls=try? FileManager.default.contentsOfDirectory(at:directory,includingPropertiesForKeys:nil,options:.skipsHiddenFiles) else {return nil}
+    for url in urls.sorted(by:{$0.lastPathComponent<$1.lastPathComponent}) where url.pathExtension=="appex" {
+        guard let data=try? Data(contentsOf:url.appendingPathComponent("Info.plist")),
+            let info=(try? PropertyListSerialization.propertyList(from:data,options:[],format:nil)) as? [String:Any],
+            let settings=info["NSExtension"] as? [String:Any],
+            settings["NSExtensionPointIdentifier"] as? String == "com.apple.broadcast-services-upload",
+            let identifier=info["CFBundleIdentifier"] as? String,!identifier.isEmpty,!identifier.contains("$(") else {continue}
+        return identifier
+    }
+    return nil
+}

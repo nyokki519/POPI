@@ -8,3 +8,14 @@ precondition(invalid.top==defaults.top && invalid.bottom==defaults.bottom)
 let outside=ReaderConfiguration(["top":NSNumber(value:-10),"bottom":NSNumber(value:2),"rate":NSNumber(value:-1)])
 precondition(outside.top==0 && outside.bottom==1 && outside.rate==0.35)
 print("PASS configuration defaults, reversed boundaries, nonfinite values and limits")
+let app=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("Reader.app")
+let plugin=app.appendingPathComponent("PlugIns/Upload.appex")
+try FileManager.default.createDirectory(at:plugin,withIntermediateDirectories:true)
+defer {try? FileManager.default.removeItem(at:app.deletingLastPathComponent())}
+for identifier in ["jp.nyokki519.GravityReader.Upload","jp.nyokki519.GravityReader.Upload.TEAM123"] {
+ let info:[String:Any]=["CFBundleIdentifier":identifier,"NSExtension":["NSExtensionPointIdentifier":"com.apple.broadcast-services-upload"]]
+ try PropertyListSerialization.data(fromPropertyList:info,format:.xml,options:0).write(to:plugin.appendingPathComponent("Info.plist"))
+ precondition(bundledUploadIdentifier(applicationURL:app)==identifier,"Must discover actual signed extension identifier")
+}
+precondition(bundledUploadIdentifier(applicationURL:app.appendingPathComponent("missing"))==nil)
+print("PASS original and re-signed upload extension discovery; missing bundle rejected")

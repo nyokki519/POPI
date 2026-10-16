@@ -49,7 +49,7 @@ final class ReaderViewController:UIViewController {
         let startHelp=label("右の配信ボタンをタップ",size:12,weight:.regular,color:UIColor.white.withAlphaComponent(0.88))
         let startLabels=UIStackView(arrangedSubviews:[startTitle,startHelp]);startLabels.axis = .vertical;startLabels.spacing=5
         let picker=RPSystemBroadcastPickerView(frame:CGRect(x:0,y:0,width:60,height:60))
-        picker.preferredExtension=(Bundle.main.bundleIdentifier ?? "jp.nyokki519.GravityReader")+".Upload";picker.showsMicrophoneButton=false
+        picker.preferredExtension=bundledUploadIdentifier(applicationURL:Bundle.main.bundleURL);picker.showsMicrophoneButton=false
         picker.backgroundColor = .white;picker.layer.cornerRadius=30;picker.translatesAutoresizingMaskIntoConstraints=false
         picker.widthAnchor.constraint(equalToConstant:60).isActive=true;picker.heightAnchor.constraint(equalToConstant:60).isActive=true
         let action=UIStackView(arrangedSubviews:[startLabels,picker]);action.axis = .horizontal;action.alignment = .center;action.spacing=10
