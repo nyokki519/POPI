@@ -135,6 +135,9 @@ struct ChatLayoutAnalyzer {
         }
         // A name is helpful, never mandatory. Attach remaining OCR rows to
         // the nearest image above-left, independently of bubble palette.
+        let textAreas=sorted.map {line in
+            Component(x:Int(line.x*Double(w)),y:Int(line.y*Double(h)),maxX:Int((line.x+line.width)*Double(w)),maxY:Int((line.y+line.height)*Double(h)),area:0)
+        }
         var fallback:[(OCRLine,(Int,Int,Int))]=[]
         for (index,line) in sorted.enumerated() {
             if nameIndices.contains(index) {continue}
@@ -144,7 +147,7 @@ struct ChatLayoutAnalyzer {
                 bottom<min(keyTop,oy+vh*0.89),(line.x+line.width)*Double(w)<=ox+vw*0.90 else {continue}
             if messages.contains(where:{line.y>=($0.y-0.005) && line.y+line.height<=($0.y+$0.height+0.005)}) {continue}
             let rect=Component(x:Int(x),y:Int(y),maxX:Int((line.x+line.width)*Double(w)),maxY:Int(bottom),area:0)
-            guard let anchor=avatarAnchor(leftOf:rect,viewport:viewport,pixels:pixels,w:w,h:h,bodyAligned:true) ?? imagePatchAnchor(beside:rect,viewport:viewport,raster:raster,bodyAligned:true) else {continue}
+            guard let anchor=avatarAnchor(leftOf:rect,viewport:viewport,pixels:pixels,w:w,h:h,bodyAligned:true,excluding:textAreas) ?? imagePatchAnchor(beside:rect,viewport:viewport,raster:raster,bodyAligned:true,excluding:textAreas) else {continue}
             if let last=fallback.last,abs(last.1.0-anchor.0)<=anchor.2,
                 abs(last.1.1-anchor.1)<=anchor.2,
                 line.y-last.0.y-last.0.height<=0.045*vh/Double(h),
@@ -182,7 +185,7 @@ struct ChatLayoutAnalyzer {
     private func hasImagePatch(beside name:Component,viewport:Component,raster:LayoutRaster)->Bool {
         imagePatchAnchor(beside:name,viewport:viewport,raster:raster) != nil
     }
-    private func imagePatchAnchor(beside name:Component,viewport:Component,raster:LayoutRaster,bodyAligned:Bool=false)->(Int,Int,Int)? {
+    private func imagePatchAnchor(beside name:Component,viewport:Component,raster:LayoutRaster,bodyAligned:Bool=false,excluding:[Component]=[])->(Int,Int,Int)? {
         // Image texture plus edges on three sides admits square / heavily
         // decorated photos without accepting a nearby text stroke alone.
         let w=raster.width,h=raster.height,bytes=raster.rgba
@@ -198,6 +201,7 @@ struct ChatLayoutAnalyzer {
             return abs(Int(bytes[p])-Int(bytes[q]))+abs(Int(bytes[p+1])-Int(bytes[q+1]))+abs(Int(bytes[p+2])-Int(bytes[q+2]))
         }
         for cy in stride(from:maxY,through:minY,by:-3) {for cx in stride(from:minX,through:maxX,by:3) {
+            if excluding.contains(where:{cx+r/2 >= $0.x && cx-r/2 <= $0.maxX && cy+r/2 >= $0.y && cy-r/2 <= $0.maxY}) {continue}
             var sides=0,texture=0
             for d in [-r/2,0,r/2] {
                 if difference(cx-r/2,cy+d,cx-r-2,cy+d)>60 {sides |= 1}
@@ -233,7 +237,7 @@ struct ChatLayoutAnalyzer {
     private func hasAvatar(leftOf bubble:Component,viewport:Component,pixels:[UInt8],w:Int,h:Int,nameAligned:Bool=false)->Bool {
         avatarAnchor(leftOf:bubble,viewport:viewport,pixels:pixels,w:w,h:h,nameAligned:nameAligned) != nil
     }
-    private func avatarAnchor(leftOf bubble:Component,viewport:Component,pixels:[UInt8],w:Int,h:Int,nameAligned:Bool=false,bodyAligned:Bool=false)->(Int,Int,Int)? {
+    private func avatarAnchor(leftOf bubble:Component,viewport:Component,pixels:[UInt8],w:Int,h:Int,nameAligned:Bool=false,bodyAligned:Bool=false,excluding:[Component]=[])->(Int,Int,Int)? {
         let minRadius=max(3,Int(Double(viewport.width)*0.029))
         let maxRadius=max(minRadius,Int(Double(viewport.width)*0.058))
         for radius in stride(from:minRadius,through:maxRadius,by:2) {
@@ -261,6 +265,7 @@ struct ChatLayoutAnalyzer {
             guard minX<=maxX,minY<=maxY else {continue}
             for cy in stride(from:maxY,through:minY,by:-2) {
                 for cx in stride(from:minX,through:maxX,by:2) {
+                    if excluding.contains(where:{cx+radius/2 >= $0.x && cx-radius/2 <= $0.maxX && cy+radius/2 >= $0.y && cy-radius/2 <= $0.maxY}) {continue}
                     var edges=0,sectors=[0,0,0,0]
                     for (index,offset) in offsets.enumerated() {
                         let ix=cx+offset.0,iy=cy+offset.1,ox=cx+offset.2,oy=cy+offset.3

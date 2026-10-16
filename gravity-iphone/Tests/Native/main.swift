@@ -50,6 +50,7 @@ for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
  check("native keyboard text excluded",keyboard.messages?.map{$0.text.replacingOccurrences(of:" ",with:"")} == ["こんばんは"])
 }
 let noAvatar=try ChatFrameProcessor().process(room(width:750,height:1334,withAvatar:false),orientation:.up)
+print("::notice::No-avatar native candidates: \(noAvatar.messages?.map{$0.text} ?? [])")
 check("native announcement without avatar excluded",noAvatar.messages?.isEmpty==true)
 let animated=ChatFrameProcessor()
 var completed=false
