@@ -37,7 +37,7 @@ func room(width:Int,height:Int,withAvatar:Bool=true,withName:Bool=true,comment:S
     return CIImage(cgImage:cg.makeImage()!)
 }
 for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
- let processor=ChatFrameProcessor()
+ let processor=ChatFrameProcessor(broadReading:false)
  let input=room(width:w,height:h)
  let first=try processor.process(input,orientation:.up)
  check("native OCR \(w)x\(h) includes comment only",first.messages?.map{$0.text.replacingOccurrences(of:" ",with:"")} == ["こんばんは"])
@@ -49,10 +49,10 @@ for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
  let keyboard=try processor.process(room(width:w,height:h,keyboard:true),orientation:.up)
  check("native keyboard text excluded",keyboard.messages?.map{$0.text.replacingOccurrences(of:" ",with:"")} == ["こんばんは"])
 }
-let noAvatar=try ChatFrameProcessor().process(room(width:750,height:1334,withAvatar:false),orientation:.up)
+let noAvatar=try ChatFrameProcessor(broadReading:false).process(room(width:750,height:1334,withAvatar:false),orientation:.up)
 print("::notice::No-avatar native candidates: \(noAvatar.messages?.map{$0.text} ?? [])")
 check("native announcement without avatar excluded",noAvatar.messages?.isEmpty==true)
-let animated=ChatFrameProcessor()
+let animated=ChatFrameProcessor(broadReading:false)
 var completed=false
 for i in 0..<4 {
     let frame=try animated.process(room(width:750,height:1334,three:true,tint:0.90+CGFloat(i)*0.025),orientation:.up)
@@ -61,28 +61,28 @@ for i in 0..<4 {
 }
 check("animated upper bubbles cannot starve third message",completed)
 let rotate=room(width:750,height:1334)
-let rotated=try ChatFrameProcessor().process(rotate.oriented(forExifOrientation:8),orientation:.right)
+let rotated=try ChatFrameProcessor(broadReading:false).process(rotate.oriented(forExifOrientation:8),orientation:.right)
 check("rotated sample returns upright chat",rotated.messages?.first?.text.replacingOccurrences(of:" ",with:"")=="こんばんは")
 for (message,expectedWords) in [("@しおちゃん おかえりー！",["しおちゃん","おかえり"]),("@ぱやみ 多分2人は\nおこちゃまなんだよ",["ぱやみ","おこちゃまなんだよ"])] {
  let sample=room(width:1170,height:2532,comment:message)
- let extracted=try ChatFrameProcessor().process(sample,orientation:.up)
+ let extracted=try ChatFrameProcessor(broadReading:false).process(sample,orientation:.up)
  let body=normalizeComment(extracted.messages?.first?.text ?? "").replacingOccurrences(of:" ",with:"")
  print("::notice::Synthetic mention OCR bubbles=\(extracted.bubbles) count=\(extracted.messages?.count ?? -1) text=\(body)")
  check("mentioned user and message body retained: \(expectedWords[0])",expectedWords.allSatisfy{body.contains($0)})
 }
 for tint:CGFloat in [0.22,0.72] {
- let dark=try ChatFrameProcessor().process(room(width:750,height:1334,tint:tint),orientation:.up)
+ let dark=try ChatFrameProcessor(broadReading:false).process(room(width:750,height:1334,tint:tint),orientation:.up)
  check("gray bubble native OCR \(tint)",dark.messages?.first?.text.replacingOccurrences(of:" ",with:"")=="こんばんは")
- let noIcon=try ChatFrameProcessor().process(room(width:750,height:1334,withAvatar:false,tint:tint),orientation:.up)
+ let noIcon=try ChatFrameProcessor(broadReading:false).process(room(width:750,height:1334,withAvatar:false,tint:tint),orientation:.up)
  check("gray bubble without avatar is excluded \(tint)",noIcon.messages?.isEmpty==true)
 }
 for color in [CGColor(red:0.8,green:0.05,blue:0.6,alpha:1),CGColor(red:0.02,green:0.25,blue:0.7,alpha:1),CGColor(red:0.10,green:0.38,blue:0.48,alpha:1)] {
  let sample=room(width:1170,height:2532,bubbleColor:color,whiteText:true)
- let result=try ChatFrameProcessor().process(sample,orientation:.up)
+ let result=try ChatFrameProcessor(broadReading:false).process(sample,orientation:.up)
  check("colored or unoutlined body OCR, actual \(result.messages?.map{$0.text} ?? [])",result.messages?.first?.text.replacingOccurrences(of:" ",with:"")=="こんばんは")
 }
 for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
- let processor=ChatFrameProcessor()
+ let processor=ChatFrameProcessor(broadReading:false)
  let sample=room(width:w,height:h,withName:false,comment:"こんばんは\nまた来ます")
  let frame=try processor.process(sample,orientation:.up)
  let text=frame.messages?.first?.text.replacingOccurrences(of:" ",with:"") ?? ""
@@ -90,6 +90,29 @@ for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
  let detector=CommentDetector(filterSystemLabels:false,liveMode:true)
  _=detector.ingest(frame.messages ?? [],now:0)
  check("native selected message reaches live speech candidates",detector.ingest(frame.messages ?? [],now:1).count==1)
+}
+// Legacy strict-path checks above are retained separately. The default shipped
+// path below deliberately accepts announcements and has no avatar prerequisite.
+for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
+ let processor=ChatFrameProcessor()
+ let input=room(width:w,height:h,withAvatar:false,withName:false,comment:"こんばんは\nまた来ます")
+ let frame=try processor.process(input,orientation:.up)
+ let selected=frame.messages ?? []
+ let text=selected.map{$0.text}.joined().replacingOccurrences(of:" ",with:"")
+ check("broad native missing avatar and name \(w)x\(h)",text.contains("こんばんは") && text.contains("また来ます"))
+ check("broad native permits announcement",text.contains("公式アナウンス"))
+ check("broad native excludes input control",!text.contains("メッセージ") && !text.contains("送信"))
+ let detector=CommentDetector(filterSystemLabels:false,recallMode:true)
+ check("broad native reaches speech candidates on first frame",detector.ingest(selected,now:0).count==selected.count && !selected.isEmpty)
+ let cached=try processor.process(input,orientation:.up)
+ check("broad native cache avoids OCR and duplicate speech",cached.recognitions==0 && detector.ingest(cached.messages ?? [],now:1).isEmpty)
+ let keyboard=try processor.process(room(width:w,height:h,withAvatar:false,withName:false,keyboard:true),orientation:.up)
+ let keyText=(keyboard.messages ?? []).map{$0.text}.joined().replacingOccurrences(of:" ",with:"")
+ check("broad native keyboard excluded without losing comment",keyText.contains("こんばんは") && !keyText.contains("あ"))
+}
+for color in [CGColor(red:0.8,green:0.05,blue:0.6,alpha:1),CGColor(red:0.02,green:0.25,blue:0.7,alpha:1),CGColor(red:0.10,green:0.38,blue:0.48,alpha:1)] {
+ let result=try ChatFrameProcessor().process(room(width:1170,height:2532,withAvatar:false,withName:false,bubbleColor:color,whiteText:true),orientation:.up)
+ check("broad native color independent without avatar",(result.messages ?? []).map{$0.text}.joined().contains("こんばんは"))
 }
 print("Native Vision tests: \(failures==0 ? "PASS":"FAIL") — generated test images, not a GRAVITY recording")
 exit(failures==0 ? 0:1)

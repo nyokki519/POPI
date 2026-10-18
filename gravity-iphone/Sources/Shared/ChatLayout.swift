@@ -67,6 +67,42 @@ struct ChatLayoutAnalyzer {
     }
     /// Text-first layout: a left image, a name row, then body rows. No bubble
     /// fill color, circular silhouette, or closed bubble contour is required.
+    /// Recall-first path: no avatar, name, fill color or bubble requirements.
+    /// Only fixed control edges and strongly repeated keyboard grids are masked.
+    func readingLines(in raster:LayoutRaster,lines:[OCRLine])->[OCRLine] {
+        let w=raster.width,h=raster.height
+        guard w>=32,h>=32,w<=1024,h<=1024,raster.rgba.count==w*h*4 else {return []}
+        let width=Double(w),height=Double(h)
+        let keys=colorPatches(raster).filter {c in
+            let x=Double(c.width)/width,y=Double(c.height)/height
+            return Double(c.y)/height>0.45 && x>=0.04 && x<=0.30 && y>=0.025 && y<=0.13
+        }
+        var rows:[[Component]]=[]
+        for key in keys.sorted(by:{$0.y<$1.y}) {
+            if let last=rows.last,let first=last.first,abs(first.y-key.y)<=max(3,Int(height*0.012)) {rows[rows.count-1].append(key)}
+            else {rows.append([key])}
+        }
+        let qwerty=rows.filter {row in
+            row.count>=6 && Double(row.map{$0.maxX}.max()! - row.map{$0.x}.min()!)>width*0.55
+        }
+        let kana=rows.filter {row in
+            row.count>=3 && Double(row.map{$0.maxX}.max()! - row.map{$0.x}.min()!)>width*0.65
+        }
+        let keyboardRows=qwerty.count>=2 ? qwerty:(kana.count>=3 ? kana:[])
+        let keyboardTop=Double(keyboardRows.compactMap{$0.first?.y}.min() ?? h)/height
+        let valid=lines.filter {line in
+            line.confidence>=0.2 && line.x.isFinite && line.y.isFinite && line.width.isFinite && line.height.isFinite &&
+            line.x>=0.015 && line.x<0.78 && line.y>=0.17 && line.width>0 && line.height>0 &&
+            line.x+line.width<=1.01 && line.y+line.height<=min(0.90,keyboardTop) &&
+            !normalizeComment(line.text).isEmpty
+        }.sorted {$0.y == $1.y ? $0.x<$1.x:$0.y<$1.y}
+        // Recognize this reader's own controls only as a pair. No generic
+        // announcement, entry, username or word-content blacklist is applied.
+        let labels=valid.map {normalizeComment($0.text)}
+        if labels.contains("画面配信をはじめる") && labels.contains("読まれないときの確認") {return []}
+        if labels.contains("スクリーンショットを選ぶ") && labels.contains("認識した文字を試し読み") {return []}
+        return Array(valid.suffix(60))
+    }
     func structuralMessages(in raster:LayoutRaster,lines:[OCRLine])->[OCRLine] {
         let w=raster.width,h=raster.height
         guard w>=32,h>=32,w<=1024,h<=1024,raster.rgba.count==w*h*4 else {return []}

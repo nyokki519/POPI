@@ -25,15 +25,15 @@ final class DiagnosticsViewController:UIViewController,PHPickerViewControllerDel
         }
         let title=UILabel();title.text="読み取りの確認";title.font = .boldSystemFont(ofSize:22)
         status.numberOfLines=0;status.font = .systemFont(ofSize:14)
-        status.text="ルームのスクリーンショットを選ぶと、配信と同じ処理で本文を確認します。画像は保存・送信しません。配信は停止してからお試しください。"
+        status.text="ルームのスクリーンショットを選ぶと、配信と同じ処理で読取対象を確認します。画像は保存・送信しません。配信は停止してからお試しください。"
         preview.contentMode = .scaleAspectFit;preview.heightAnchor.constraint(equalToConstant:180).isActive=true
         body.isEditable=false;body.font = .systemFont(ofSize:16);body.backgroundColor = .secondarySystemBackground
-        body.accessibilityLabel="認識したコメント本文"
+        body.accessibilityLabel="認識した文字"
         stack.addArrangedSubview(title);stack.addArrangedSubview(status)
         stack.addArrangedSubview(button("スクリーンショットを選ぶ",#selector(selectPhoto)))
         stack.addArrangedSubview(preview);stack.addArrangedSubview(body)
         stack.addArrangedSubview(button("音声だけテスト",#selector(testAudio)))
-        stack.addArrangedSubview(button("認識した本文を試し読み",#selector(readBody)))
+        stack.addArrangedSubview(button("認識した文字を試し読み",#selector(readBody)))
         stack.addArrangedSubview(button("閉じる",#selector(close)))
     }
     private func button(_ title:String,_ action:Selector)->UIButton {
@@ -86,9 +86,9 @@ final class DiagnosticsViewController:UIViewController,PHPickerViewControllerDel
                     DispatchQueue.main.async { [weak self] in
                         guard let self=self,self.generation.isCurrent(token),self.viewIfLoaded?.window != nil else {return}
                         self.preview.image=annotated;self.body.text=recognized;self.text=recognized
-                        if candidates==0 {self.status.text=textRows==0 ? "画面の文字を認識できませんでした。":"文字は\(textRows)行認識しましたが、アイコンと本文の組み合わせを見つけられませんでした。"}
-                        else if rows.isEmpty {self.status.text="発言は\(candidates)件検出しましたが、文字を認識できませんでした。"}
-                        else {self.status.text="画面の文字\(textRows)行／発言\(rows.count)件。緑枠が認識した本文です。試し読みで音声も確認できます。"}
+                        if candidates==0 {self.status.text=textRows==0 ? "画面の文字を認識できませんでした。":"文字は\(textRows)行認識しましたが、読取範囲内の文字がありませんでした。"}
+                        else if rows.isEmpty {self.status.text="読取対象は\(candidates)件検出しましたが、文字を認識できませんでした。"}
+                        else {self.status.text="画面の文字\(textRows)行／読取対象\(rows.count)件。緑枠が認識した文字です。試し読みで音声も確認できます。"}
                     }
                 } catch {
                     DispatchQueue.main.async { [weak self] in

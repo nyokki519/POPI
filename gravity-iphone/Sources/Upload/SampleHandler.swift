@@ -4,7 +4,7 @@ import AVFoundation
 import ImageIO
 import CoreImage
 final class SampleHandler:RPBroadcastSampleHandler {
-    private var detector=CommentDetector(filterSystemLabels:false,liveMode:true)
+    private var detector=CommentDetector(filterSystemLabels:false,recallMode:true)
     private let processor=ChatFrameProcessor()
     private var budget=RecognitionBudget()
     private var configuration=ReaderConfiguration()
@@ -19,7 +19,10 @@ final class SampleHandler:RPBroadcastSampleHandler {
         NSLog("GravityReader started; images and recognized text are not stored or uploaded")
     }
     private func startSpeaker(rate:Float) {
-        do {try speaker.start(rate:rate)} catch {finishBroadcastWithError(NSError(domain:"GravityReader",code:3,userInfo:[NSLocalizedDescriptionKey:"読み上げ用音声を開始できませんでした。GRAVITYの音声ルームを一度閉じて、画面配信を再開始してください。" ]))}
+        do {
+            try speaker.start(rate:rate)
+            speaker.enqueue(["読み上げを開始します。"],time:ProcessInfo.processInfo.systemUptime)
+        } catch {finishBroadcastWithError(NSError(domain:"GravityReader",code:3,userInfo:[NSLocalizedDescriptionKey:"読み上げ用音声を開始できませんでした。GRAVITYの音声ルームを一度閉じて、画面配信を再開始してください。" ]))}
     }
     override func processSampleBuffer(_ sampleBuffer:CMSampleBuffer,with type:RPSampleBufferType) {
         guard type == .video,!paused else {return}
@@ -59,7 +62,7 @@ final class SampleHandler:RPBroadcastSampleHandler {
 // dispatch start/enqueue/stop in order; stopped sessions cannot keep queued speech.
 private final class PrivateSpeaker:NSObject,AVSpeechSynthesizerDelegate {
     private let synth=AVSpeechSynthesizer()
-    private var queue=FreshSpeechQueue(capacity:6,maxAge:8,maxCharacters:120)
+    private var queue=FreshSpeechQueue(capacity:60,maxAge:90,maxCharacters:2000)
     private var active=false
     private var rate:Float=0.5
     func start(rate:Float) throws {

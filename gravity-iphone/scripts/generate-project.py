@@ -26,7 +26,7 @@ for p in sorted((root/'Resources').glob('*.xcassets')):
 for name in targetids:
     app=name=='GravityReader'
     identifier='jp.nyokki519.GravityReader'+('' if app else '.'+name)
-    info={'CFBundleDevelopmentRegion':'ja','CFBundleExecutable':'$(EXECUTABLE_NAME)','CFBundleIdentifier':'$(PRODUCT_BUNDLE_IDENTIFIER)','CFBundleInfoDictionaryVersion':'6.0','CFBundleName':'$(PRODUCT_NAME)','CFBundlePackageType':'APPL' if app else 'XPC!','CFBundleShortVersionString':'0.6','CFBundleVersion':'6','CFBundleDisplayName':'オカマ読み上げスッキリアプリ'}
+    info={'CFBundleDevelopmentRegion':'ja','CFBundleExecutable':'$(EXECUTABLE_NAME)','CFBundleIdentifier':'$(PRODUCT_BUNDLE_IDENTIFIER)','CFBundleInfoDictionaryVersion':'6.0','CFBundleName':'$(PRODUCT_NAME)','CFBundlePackageType':'APPL' if app else 'XPC!','CFBundleShortVersionString':'0.7','CFBundleVersion':'7','CFBundleDisplayName':'オカマ読み上げスッキリアプリ'}
     if app:info.update(UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationPortrait'])
     else:
         attrs={'RPBroadcastExtension':'jp.nyokki519.GravityReader.Upload'} if name=='Setup' else {'RPBroadcastProcessMode':'RPBroadcastProcessModeSampleBuffer'}

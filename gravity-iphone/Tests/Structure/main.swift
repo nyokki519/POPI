@@ -40,8 +40,26 @@ for tone:UInt8 in [55,250] {
  }}
  keyboard=LayoutRaster(width:w,height:h,rgba:bytes)
  check("structural keyboard exclusion tone \(tone)",analyzer.structuralMessages(in:keyboard,lines:[line("太郎",0.16,0.55),line("あいうえお",0.16,0.64)]).isEmpty)
+ let recallKeyboard=analyzer.readingLines(in:keyboard,lines:words+[line("あいうえお",0.16,0.64)])
+ check("recall excludes keyboard while keeping chat \(tone)",recallKeyboard.map{$0.text}==words.map{$0.text})
+
 }
 check("missing-name multiline body stays one message",analyzer.structuralMessages(in:image(),lines:[words[1],line("また来ます",0.16,0.475)]).first?.text=="こんばんは〜 また来ます")
 check("wide body retained",analyzer.structuralMessages(in:image(),lines:[words[0],line("幅の広いコメント",0.16,0.44,0.65)]).count==1)
 check("own application controls excluded",analyzer.structuralMessages(in:image(),lines:[words[0],line("おしゃべりを、聞こう。",0.16,0.44),line("画面配信をはじめる",0.16,0.475)]).isEmpty)
+let broad=analyzer.readingLines(in:image(false),lines:words)
+check("recall selection does not require avatar or bubble",broad.map{$0.text}==["太郎","こんばんは〜"])
+check("recall selection retains announcements",analyzer.readingLines(in:image(false),lines:[line("公式のお知らせ",0.04,0.3)]).count==1)
+check("recall selection excludes fixed edge controls",analyzer.readingLines(in:image(false),lines:[line("上部ボタン",0.2,0.05),line("メッセージを送信",0.1,0.94),line("座席",0.84,0.4)]).isEmpty)
+check("recall selection keeps wide body crossing right side",analyzer.readingLines(in:image(false),lines:[line("幅広いコメント",0.12,0.45,0.84)]).count==1)
+let softBody=OCRLine(text:"本文",confidence:0.25,x:0.18,y:0.45,width:0.3,height:0.03)
+check("recall selection keeps lower confidence body",analyzer.readingLines(in:image(false),lines:[softBody]).count==1)
+var kana=image(false)
+var kanaBytes=kana.rgba
+for row in 0..<3 {for col in 0..<3 {
+ let x=Int((0.05+Double(col)*0.31)*320),y=Int((0.60+Double(row)*0.09)*560)
+ for dy in 0..<36 {for dx in 0..<80 {let i=((y+dy)*320+x+dx)*4;kanaBytes[i]=245;kanaBytes[i+1]=245;kanaBytes[i+2]=245}}
+}}
+kana=LayoutRaster(width:320,height:560,rgba:kanaBytes)
+check("recall excludes three-column kana keyboard",analyzer.readingLines(in:kana,lines:words+[line("あかさ",0.16,0.64)]).map{$0.text}==words.map{$0.text})
 print("RESULT \(checks-failures)/\(checks) passed");exit(failures==0 ? 0:1)

@@ -12,9 +12,11 @@ struct ChatFrameResult {
     let textRows:Int
 }
 
-/// One bounded text pass, then image/name/body association. Original ReplayKit
+/// One bounded text pass, then recall-first region filtering (strict legacy path is testable). ReplayKit
 /// buffers never escape the callback; cache contains only bounded text results.
 final class ChatFrameProcessor {
+    private let broadReading:Bool
+    init(broadReading:Bool=true) {self.broadReading=broadReading}
     private let context=CIContext(options:[.cacheIntermediates:false])
     private let analyzer=ChatLayoutAnalyzer()
     private var cache:[UInt64:(messages:[OCRLine],textRows:Int)]=[:]
@@ -50,7 +52,7 @@ final class ChatFrameProcessor {
             let box=observation.boundingBox
             return OCRLine(text:candidate.string,confidence:Double(candidate.confidence),x:roi.x+box.minX*roi.width,y:roi.y+(1-box.maxY)*roi.height,width:box.width*roi.width,height:box.height*roi.height)
         }
-        let messages=analyzer.structuralMessages(in:raster,lines:lines)
+        let messages=broadReading ? analyzer.readingLines(in:raster,lines:lines):analyzer.structuralMessages(in:raster,lines:lines)
         cache[key]=(messages:messages,textRows:lines.count);order.append(key)
         if order.count>12 {cache.removeValue(forKey:order.removeFirst())}
         return ChatFrameResult(messages:messages,bubbles:messages.count,recognitions:1,capturedAt:now,textRows:lines.count)
