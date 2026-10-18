@@ -64,4 +64,10 @@ kana=LayoutRaster(width:320,height:560,rgba:kanaBytes)
 check("recall excludes three-column kana keyboard",analyzer.readingLines(in:kana,lines:words+[line("あかさ",0.16,0.64)]).map{$0.text}==words.map{$0.text})
 let uncertain=OCRLine(text:"自信度だけでは落とさない",confidence:0.05,x:0.2,y:0.5,width:0.5,height:0.03)
 check("recall region has no confidence rejection",analyzer.readingLines(in:image(false),lines:[uncertain]).count==1)
+for color:(UInt8,UInt8,UInt8) in [(250,250,250),(55,55,55),(210,20,160)] {
+ check("balanced bubble body without avatar \(color)",analyzer.balancedMessages(in:image(false,color),lines:words).map{$0.text}==["こんばんは〜"])
+}
+check("balanced no surface does not read names or background text",analyzer.balancedMessages(in:image(false,(25,95,120)),lines:words).isEmpty)
+check("balanced multiline body grouped",analyzer.balancedMessages(in:image(false,(250,250,250)),lines:multi).map{$0.text}==["こんばんは〜 また来ます"])
+check("balanced kana keys excluded",analyzer.balancedMessages(in:kana,lines:words+[line("あかさ",0.16,0.64)]).map{$0.text}==["こんばんは〜"])
 print("RESULT \(checks-failures)/\(checks) passed");exit(failures==0 ? 0:1)

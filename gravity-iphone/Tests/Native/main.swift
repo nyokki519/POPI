@@ -94,7 +94,7 @@ for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
 // Legacy strict-path checks above are retained separately. The default shipped
 // path below deliberately accepts announcements and has no avatar prerequisite.
 for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
- let processor=ChatFrameProcessor()
+ let processor=ChatFrameProcessor(lightweight:false)
  let input=room(width:w,height:h,withAvatar:false,withName:false,comment:"こんばんは\nまた来ます")
  let frame=try processor.process(input,orientation:.up)
  let selected=frame.messages ?? []
@@ -111,8 +111,42 @@ for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
  check("broad native keyboard excluded without losing comment",keyText.contains("こんばんは") && !keyText.contains("あ"))
 }
 for color in [CGColor(red:0.8,green:0.05,blue:0.6,alpha:1),CGColor(red:0.02,green:0.25,blue:0.7,alpha:1),CGColor(red:0.10,green:0.38,blue:0.48,alpha:1)] {
- let result=try ChatFrameProcessor().process(room(width:1170,height:2532,withAvatar:false,withName:false,bubbleColor:color,whiteText:true),orientation:.up)
+ let result=try ChatFrameProcessor(lightweight:false).process(room(width:1170,height:2532,withAvatar:false,withName:false,bubbleColor:color,whiteText:true),orientation:.up)
  check("broad native color independent without avatar",(result.messages ?? []).map{$0.text}.joined().contains("こんばんは"))
 }
+// Shipped lightweight balanced path. Earlier modes remain regression references.
+for (w,h) in [(750,1334),(1170,2532),(1290,2796)] {
+ let processor=ChatFrameProcessor()
+ let input=room(width:w,height:h,withAvatar:false,withName:false,comment:"こんばんは\nまた来ます")
+ let first=try processor.process(input,orientation:.up)
+ let text=(first.messages ?? []).map{$0.text}.joined().replacingOccurrences(of:" ",with:"")
+ check("balanced native body only without avatar \(w)x\(h)",first.messages?.count==1 && text=="こんばんはまた来ます")
+ check("balanced cached frame skips OCR",try processor.process(input,orientation:.up).recognitions==0)
+ let outside=try processor.process(room(width:w,height:h,withAvatar:true,withName:false,comment:"こんばんは\nまた来ます"),orientation:.up)
+ check("outside avatar changes do not invalidate OCR",outside.recognitions==0)
+ let keyboard=try processor.process(room(width:w,height:h,withAvatar:false,withName:false,keyboard:true),orientation:.up)
+ check("balanced native keyboard excluded",keyboard.messages?.map{$0.text.replacingOccurrences(of:" ",with:"")}==["こんばんは"])
+ let empty=try processor.process(room(width:w,height:h,withAvatar:false,withName:false,bubbleColor:CGColor(red:0.10,green:0.38,blue:0.48,alpha:1)),orientation:.up)
+ check("no bubble surface skips OCR",empty.recognitions==0 && empty.messages?.isEmpty==true)
+}
+let threeBalanced=try ChatFrameProcessor().process(room(width:1170,height:2532,three:true),orientation:.up)
+check("balanced preserves three message bodies",threeBalanced.messages?.map{$0.text.replacingOccurrences(of:" ",with:"")}==["こんばんは","ありがとう","よろしく"])
+for color in [CGColor(gray:0.22,alpha:1),CGColor(red:0.8,green:0.05,blue:0.6,alpha:1),CGColor(red:0.02,green:0.25,blue:0.7,alpha:1)] {
+ let result=try ChatFrameProcessor().process(room(width:1170,height:2532,withAvatar:false,withName:false,bubbleColor:color,whiteText:true),orientation:.up)
+ check("balanced supports contrasting dark or colored bubble",result.messages?.first?.text.replacingOccurrences(of:" ",with:"")=="こんばんは")
+}
+var timings:[String:Double]=[:]
+let benchmarkImage=room(width:750,height:1334,three:true)
+for (name,processor) in [("v07_broad",ChatFrameProcessor(lightweight:false)),("v08_balanced",ChatFrameProcessor())] {
+ _=try processor.process(benchmarkImage,orientation:.up)
+ var samples:[Double]=[]
+ for _ in 0..<5 {
+  processor.reset();let start=ProcessInfo.processInfo.systemUptime
+  _=try processor.process(benchmarkImage,orientation:.up)
+  samples.append(ProcessInfo.processInfo.systemUptime-start)
+ }
+ timings[name]=samples.sorted()[samples.count/2]
+}
+print("::notice title=READER_BENCHMARK::"+String(data:try JSONSerialization.data(withJSONObject:timings,options:[.sortedKeys]),encoding:.utf8)!)
 print("Native Vision tests: \(failures==0 ? "PASS":"FAIL") — generated test images, not a GRAVITY recording")
 exit(failures==0 ? 0:1)

@@ -11,7 +11,7 @@ def obj(keyname,isa,**fields):
 def configlist(name,base):
     configs=[]
     for mode in ('Debug','Release'):
-        configs.append(obj(name+mode,'XCBuildConfiguration',name=mode,buildSettings={**base,'SWIFT_OPTIMIZATION_LEVEL':'-Onone' if mode=='Debug' else '-O'}))
+        configs.append(obj(name+mode,'XCBuildConfiguration',name=mode,buildSettings={**base,'SWIFT_OPTIMIZATION_LEVEL':'-O'}))
     return obj(name+'configs','XCConfigurationList',buildConfigurations=configs,defaultConfigurationIsVisible='0',defaultConfigurationName='Release')
 products=[];targets=[];targetids={name:ident(name+'target') for name in ('GravityReader','Upload')}
 fileids={}
@@ -26,7 +26,7 @@ for p in sorted((root/'Resources').glob('*.xcassets')):
 for name in targetids:
     app=name=='GravityReader'
     identifier='jp.nyokki519.GravityReader'+('' if app else '.'+name)
-    info={'CFBundleDevelopmentRegion':'ja','CFBundleExecutable':'$(EXECUTABLE_NAME)','CFBundleIdentifier':'$(PRODUCT_BUNDLE_IDENTIFIER)','CFBundleInfoDictionaryVersion':'6.0','CFBundleName':'$(PRODUCT_NAME)','CFBundlePackageType':'APPL' if app else 'XPC!','CFBundleShortVersionString':'0.7','CFBundleVersion':'7','CFBundleDisplayName':'オカマ読み上げスッキリアプリ'}
+    info={'CFBundleDevelopmentRegion':'ja','CFBundleExecutable':'$(EXECUTABLE_NAME)','CFBundleIdentifier':'$(PRODUCT_BUNDLE_IDENTIFIER)','CFBundleInfoDictionaryVersion':'6.0','CFBundleName':'$(PRODUCT_NAME)','CFBundlePackageType':'APPL' if app else 'XPC!','CFBundleShortVersionString':'0.8','CFBundleVersion':'8','CFBundleDisplayName':'オカマ読み上げスッキリアプリ'}
     if app:info.update(UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationPortrait'])
     else:
         attrs={'RPBroadcastExtension':'jp.nyokki519.GravityReader.Upload'} if name=='Setup' else {'RPBroadcastProcessMode':'RPBroadcastProcessModeSampleBuffer'}

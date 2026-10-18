@@ -6,14 +6,14 @@ import CoreImage
 final class SampleHandler:RPBroadcastSampleHandler {
     private var detector=CommentDetector(filterSystemLabels:false,recallMode:true)
     private let processor=ChatFrameProcessor()
-    private var budget=RecognitionBudget()
+    private var budget=RecognitionBudget(economy:true)
     private var configuration=ReaderConfiguration()
     private var paused=true
     private var failures=0
     private var lastDiagnostic=0.0
     private let speaker=PrivateSpeaker()
     override func broadcastStarted(withSetupInfo setupInfo:[String:NSObject]?) {
-        configuration=ReaderConfiguration(setupInfo);detector.reset();processor.reset();budget=RecognitionBudget();paused=false;failures=0
+        configuration=ReaderConfiguration(setupInfo);detector.reset();processor.reset();budget=RecognitionBudget(economy:true);paused=false;failures=0
         let rate=Float(configuration.rate)
         DispatchQueue.main.async { [weak self] in self?.startSpeaker(rate:rate) }
         NSLog("GravityReader started; images and recognized text are not stored or uploaded")
@@ -55,7 +55,7 @@ final class SampleHandler:RPBroadcastSampleHandler {
         }
     }
     override func broadcastPaused() {paused=true;DispatchQueue.main.async { [weak self] in self?.speaker.stop() }}
-    override func broadcastResumed() {paused=false;detector.reset();processor.reset();budget=RecognitionBudget();let rate=Float(configuration.rate);DispatchQueue.main.async { [weak self] in self?.startSpeaker(rate:rate) }}
+    override func broadcastResumed() {paused=false;detector.reset();processor.reset();budget=RecognitionBudget(economy:true);let rate=Float(configuration.rate);DispatchQueue.main.async { [weak self] in self?.startSpeaker(rate:rate) }}
     override func broadcastFinished() {paused=true;DispatchQueue.main.async { [weak self] in self?.speaker.stop() };NSLog("GravityReader finished")}
 }
 // All speaker state is confined to the main queue. Serial ReplayKit callbacks

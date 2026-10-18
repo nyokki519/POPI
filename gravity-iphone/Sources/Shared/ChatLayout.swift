@@ -69,6 +69,48 @@ struct ChatLayoutAnalyzer {
     /// fill color, circular silhouette, or closed bubble contour is required.
     /// Recall-first path: no avatar, name, fill color or bubble requirements.
     /// Only fixed control edges and strongly repeated keyboard grids are masked.
+    // Cheap at the shipped 192px thumbnail size. No avatar or username gate.
+    func balancedRegions(in raster:LayoutRaster)->[ChatRegion] {
+        let w=raster.width,h=raster.height
+        guard w>=32,h>=32,w<=1024,h<=1024,raster.rgba.count==w*h*4 else {return []}
+        let width=Double(w),height=Double(h),patches=colorPatches(raster)
+        let keys=patches.filter {c in
+            let x=Double(c.width)/width,y=Double(c.height)/height
+            return Double(c.y)/height>0.45 && x>=0.04 && x<=0.30 && y>=0.025 && y<=0.13
+        }
+        var rows:[[Component]]=[]
+        for key in keys.sorted(by:{$0.y<$1.y}) {
+            if let last=rows.last,let first=last.first,abs(first.y-key.y)<=max(2,Int(height*0.012)) {rows[rows.count-1].append(key)}
+            else {rows.append([key])}
+        }
+        let qwerty=rows.filter {$0.count>=6 && Double($0.map{$0.maxX}.max()! - $0.map{$0.x}.min()!)>width*0.55}
+        let kana=rows.filter {$0.count>=3 && Double($0.map{$0.maxX}.max()! - $0.map{$0.x}.min()!)>width*0.65}
+        let keyRows=qwerty.count>=2 ? qwerty:(kana.count>=3 ? kana:[])
+        let keyboardTop=keyRows.compactMap{$0.first?.y}.min() ?? h
+        let surfaces=patches.filter {c in
+            let x=Double(c.x)/width,y=Double(c.y)/height
+            return x>=0.11 && x<=0.45 && y>=0.28 && Double(c.maxY+1)/height<=0.90 && c.maxY<keyboardTop &&
+                Double(c.width)/width>=0.07 && Double(c.width)/width<=0.78 &&
+                Double(c.height)/height>=0.028 && Double(c.height)/height<=0.34 &&
+                Double(c.width)/Double(c.height)>=0.9 && Double(c.area)/Double(c.width*c.height)>=0.55
+        }
+        return Array(surfaces.sorted{$0.y<$1.y}.suffix(10)).map {c in
+            ChatRegion(x:Double(c.x)/width,y:Double(c.y)/height,width:Double(c.width)/width,height:Double(c.height)/height)
+        }
+    }
+    func balancedMessages(in raster:LayoutRaster,lines:[OCRLine],regions:[ChatRegion]?=nil)->[OCRLine] {
+        var result:[OCRLine]=[]
+        for region in regions ?? balancedRegions(in:raster) {
+            let body=lines.filter {line in
+                let x=line.x+line.width/2,y=line.y+line.height/2
+                return x.isFinite && y.isFinite && line.width>0 && line.height>0 &&
+                    x>=region.x && x<=region.x+region.width && y>=region.y && y<=region.y+region.height
+            }.sorted {$0.y == $1.y ? $0.x<$1.x:$0.y<$1.y}
+            let text=body.map{normalizeComment($0.text)}.filter{!$0.isEmpty}.joined(separator:" ")
+            if !text.isEmpty {result.append(OCRLine(text:text,confidence:1,x:region.x,y:region.y,width:region.width,height:region.height))}
+        }
+        return result.sorted{$0.y<$1.y}
+    }
     func readingLines(in raster:LayoutRaster,lines:[OCRLine])->[OCRLine] {
         let w=raster.width,h=raster.height
         guard w>=32,h>=32,w<=1024,h<=1024,raster.rgba.count==w*h*4 else {return []}
@@ -320,13 +362,15 @@ struct ChatLayoutAnalyzer {
 
 /// Limit duty cycle after expensive frames and when the phone becomes hot.
 struct RecognitionBudget {
+    private let economy:Bool
+    init(economy:Bool=false) {self.economy=economy}
     private var last:Double?
     private var interval=1.2
     mutating func shouldProcess(now:Double,thermal:Int)->Bool {
         guard thermal<3 else {return false}
-        let wait=max(interval,thermal>=2 ? 3.0:1.2)
+        let wait=max(interval,thermal>=2 ? (economy ? 8.0:3.0):(economy ? 3.0:1.2))
         guard last.map({now-$0>=wait}) ?? true else {return false}
         last=now;return true
     }
-    mutating func record(duration:Double) {interval=min(5,max(1.2,duration*3))}
+    mutating func record(duration:Double) {interval=economy ? min(30,max(3,duration*10)):min(5,max(1.2,duration*3))}
 }
