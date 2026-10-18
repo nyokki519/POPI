@@ -12,13 +12,17 @@ struct ChatFrameResult {
     let textRows:Int
 }
 
-/// One bounded text pass, then recall-first region filtering (strict legacy path is testable). ReplayKit
+/// Lightweight filled-surface OCR by default; legacy modes remain testable. ReplayKit
 /// buffers never escape the callback; cache contains only bounded text results.
 final class ChatFrameProcessor {
     private let broadReading:Bool
     private let lightweight:Bool
-    init(broadReading:Bool=true,lightweight:Bool=true) {self.broadReading=broadReading;self.lightweight=lightweight && broadReading}
-    private let context=CIContext(options:[.cacheIntermediates:false])
+    init(broadReading:Bool=true,lightweight:Bool=true) {
+        let lowCost=lightweight && broadReading
+        self.broadReading=broadReading;self.lightweight=lowCost
+        self.context=CIContext(options:[.cacheIntermediates:false,.priorityRequestLow:lowCost])
+    }
+    private let context:CIContext
     private let analyzer=ChatLayoutAnalyzer()
     private var cache:[UInt64:(messages:[OCRLine],textRows:Int)]=[:]
     private var order:[UInt64]=[]
@@ -34,8 +38,7 @@ final class ChatFrameProcessor {
         let tw=Int(small.extent.width),th=Int(small.extent.height)
         guard tw>=32,th>=32,let thumbnail=context.createCGImage(small,from:CGRect(x:0,y:0,width:tw,height:th)),
             let raster=Self.raster(thumbnail) else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now,textRows:0)}
-        // Broad left/central room area. Structural classification below, rather
-        // than this ROI alone, decides whether any recognized words can be read.
+        // Select small-image surfaces before OCR; legacy modes keep their broad ROI.
         let regions=lightweight ? analyzer.balancedRegions(in:raster):[]
         if lightweight && regions.isEmpty {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now,textRows:0)}
         let roi:ChatRegion
@@ -63,6 +66,7 @@ final class ChatFrameProcessor {
         let limited=cropped.transformed(by:CGAffineTransform(scaleX:downscale,y:downscale))
         guard let cg=context.createCGImage(limited,from:limited.extent) else {return ChatFrameResult(messages:[],bubbles:0,recognitions:0,capturedAt:now,textRows:0)}
         let request=VNRecognizeTextRequest();request.recognitionLevel = .accurate
+        request.preferBackgroundProcessing=lightweight
         request.recognitionLanguages=["ja-JP","en-US"];request.usesLanguageCorrection=true
         request.minimumTextHeight=0.009
         try VNImageRequestHandler(cgImage:cg,options:[:]).perform([request])

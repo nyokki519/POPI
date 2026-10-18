@@ -65,11 +65,7 @@ struct ChatLayoutAnalyzer {
         }
         return Array(found.sorted{$0.y<$1.y}.suffix(10))
     }
-    /// Text-first layout: a left image, a name row, then body rows. No bubble
-    /// fill color, circular silhouette, or closed bubble contour is required.
-    /// Recall-first path: no avatar, name, fill color or bubble requirements.
-    /// Only fixed control edges and strongly repeated keyboard grids are masked.
-    // Cheap at the shipped 192px thumbnail size. No avatar or username gate.
+    /// Filled surfaces at the shipped 192px thumbnail size. No avatar or username gate.
     func balancedRegions(in raster:LayoutRaster)->[ChatRegion] {
         let w=raster.width,h=raster.height
         guard w>=32,h>=32,w<=1024,h<=1024,raster.rgba.count==w*h*4 else {return []}
@@ -111,6 +107,7 @@ struct ChatLayoutAnalyzer {
         }
         return result.sorted{$0.y<$1.y}
     }
+    /// Legacy v0.7 recall-first path; retained for regression and comparison.
     func readingLines(in raster:LayoutRaster,lines:[OCRLine])->[OCRLine] {
         let w=raster.width,h=raster.height
         guard w>=32,h>=32,w<=1024,h<=1024,raster.rgba.count==w*h*4 else {return []}
@@ -145,6 +142,7 @@ struct ChatLayoutAnalyzer {
         if labels.contains("スクリーンショットを選ぶ") && labels.contains("認識した文字を試し読み") {return []}
         return Array(valid.suffix(60))
     }
+    /// Legacy text/image association; not used by the shipped lightweight path.
     func structuralMessages(in raster:LayoutRaster,lines:[OCRLine])->[OCRLine] {
         let w=raster.width,h=raster.height
         guard w>=32,h>=32,w<=1024,h<=1024,raster.rgba.count==w*h*4 else {return []}
