@@ -1,7 +1,7 @@
 {
-  "version": "0.6",
-  "source_commit": "2bfd90fd05c1dc8c03d2a928093e27658782f8bb",
-  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/38916527180",
+  "version": "0.7",
+  "source_commit": "9b64dcb66f57285cd2b252a24b10e640682373bd",
+  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/39093921711",
   "conclusion": "success",
   "steps": [
     {
@@ -30,7 +30,7 @@
     },
     {
       "name": "Native floral home simulator smoke test",
-      "conclusion": "success"
+      "conclusion": "skipped"
     },
     {
       "name": "Build unsigned iPhone device binaries",
@@ -50,10 +50,10 @@
     }
   ],
   "tests": {
-    "comment_and_queue": 40,
+    "comment_and_queue": 51,
     "legacy_layout_and_budget": 28,
-    "structural_classification": 17,
-    "native_Vision_checks": 37,
+    "structural_classification": 26,
+    "native_Vision_checks": 58,
     "replay_frames": 24,
     "configuration_and_resigned_extension_discovery": "passed",
     "legacy_compiler": "Official Swift 5.7.2 Linux: common logic executed successfully. Full Xcode14.2 iOS build not run.",
@@ -65,16 +65,18 @@
     "compiled_AppIcon_and_Assets_car": "verified in downloaded device IPA"
   },
   "UI_smoke": {
-    "ci_url": "https://github.com/nyokki519/POPI/actions/runs/38916527180",
+    "ci_url": "https://github.com/nyokki519/POPI/actions/runs/39093517434",
     "device": "SE3 simulator",
     "result": "App process survived 12 seconds; re-foregrounded; screenshot visually confirmed actual floral app home.",
-    "preview": "preview-v0.6.jpg",
-    "sha256": "74f28b042935b544fd60ce2a13d6d9a47274c84847b16dec5055fffc8089d156"
+    "preview": "preview-v0.7.jpg",
+    "sha256": "9236e5c5628d8490b72805bf24a39ebfb4096018f946653888fa6633ccb8a308",
+    "source_commit": "ce7fc41943c0d6e917f82f70a46165760d188623",
+    "note": "UI unchanged in final OCR-confidence-only revision; final native OCR and device builds checked separately."
   },
   "windows_IPA": {
-    "bytes": 6668598,
-    "sha256": "59463e95ec2ad3d83820542f001fb910f7fa8b0340fe924ef8943913d311876d",
-    "version": "0.6",
+    "bytes": 6675478,
+    "sha256": "69fced8c448f2bbae67dff7d023824189921c1c251d186dc3e099e22c30bed79",
+    "version": "0.7",
     "arm64_app_and_upload": true,
     "icon_catalog": true,
     "signature": "unsigned; AltStore re-signing and Windows installation not tested"
@@ -86,20 +88,26 @@
     "All paid decorations, all devices, future iOS releases"
   ],
   "limitations": [
-    "Obscured images or unrecognized body text may drop messages",
-    "Official content with identical avatar/body layout may be indistinguishable",
-    "Startup and no-overlap transitions read only latest one after two observations",
-    "Unseen history may be read after scrolling; recently seen identical wording may be suppressed for 20 seconds",
-    "Broad OCR may cost more CPU than the previous crop-only path"
+    "Fixed top/bottom/right control margins can miss messages in unusual layouts",
+    "Announcements, usernames and entry notices are intentionally permitted",
+    "OCR misses and messages appearing between sampled frames remain possible",
+    "Exact-text suppression may skip identical wording after disjoint screen changes; OCR flicker and scrolling may replay text",
+    "Speech queue limits: 60 lines, 90 seconds, 2000 characters per line; busy rooms may lag or drop excess entries",
+    "Keyboard grid detection cannot cover every keyboard or prediction bar"
   ],
   "comparison": {
     "working_audio_reference": "e38b897",
     "preserved_audio_route": "AVAudioSession playback + mixWithOthers; main-queue AVSpeechSynthesizer",
-    "changed": "Optional-name image/body fallback; live startup and disjoint-screen detection; count-only speech delegate logs",
+    "changed": "Broad region OCR without avatar/name/bubble gates; single-observation recall mode; reads initial and middle inserted rows; expanded speech queue; spoken broadcast startup cue",
+    "default_frame_processor": "broadReading=true for both live broadcast and photo diagnostics",
+    "legacy_strict_path": "37 native checks retained using broadReading=false; 21 new checks cover shipped broad default",
     "failed_regressions_fixed": [
-      "No-name body lost",
-      "Disjoint screen silently rebased",
-      "Announcement corner mistaken for avatar in generated native fixtures"
+      "Initial visible lines silent",
+      "Single-frame or disjoint unseen lines dropped",
+      "Missing avatar or name blocked text",
+      "Low OCR confidence dropped",
+      "Middle row appeared after anchors and was ignored",
+      "One-character-different message silently merged"
     ]
   }
 }
