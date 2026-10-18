@@ -94,5 +94,7 @@ check("recall reads newly recognized middle row",gradual.ingest(lines(["上の�
 let similar=CommentDetector(filterSystemLabels:false,recallMode:true)
 _=similar.ingest(lines(["今日は楽しかったですね"]),now:0)
 check("recall distinct one-character change is not silently merged",similar.ingest(lines(["今日は楽しかったですか"]),now:1)==["今日は楽しかったですか"])
+let uncertainLine=OCRLine(text:"自信度が低くても認識した文字",confidence:0.05,x:0.2,y:0.5,width:0.5,height:0.03)
+check("recall does not reject text solely for OCR confidence",CommentDetector(filterSystemLabels:false,recallMode:true).ingest([uncertainLine],now:0)==[uncertainLine.text])
 print("RESULT \(tests-failures)/\(tests) passed")
 exit(failures==0 ? 0:1)

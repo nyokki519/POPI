@@ -62,4 +62,6 @@ for row in 0..<3 {for col in 0..<3 {
 }}
 kana=LayoutRaster(width:320,height:560,rgba:kanaBytes)
 check("recall excludes three-column kana keyboard",analyzer.readingLines(in:kana,lines:words+[line("あかさ",0.16,0.64)]).map{$0.text}==words.map{$0.text})
+let uncertain=OCRLine(text:"自信度だけでは落とさない",confidence:0.05,x:0.2,y:0.5,width:0.5,height:0.03)
+check("recall region has no confidence rejection",analyzer.readingLines(in:image(false),lines:[uncertain]).count==1)
 print("RESULT \(checks-failures)/\(checks) passed");exit(failures==0 ? 0:1)

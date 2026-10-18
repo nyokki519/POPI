@@ -48,7 +48,7 @@ final class ChatFrameProcessor {
         request.minimumTextHeight=0.009
         try VNImageRequestHandler(cgImage:cg,options:[:]).perform([request])
         let lines=(request.results ?? []).compactMap {observation -> OCRLine? in
-            guard let candidate=observation.topCandidates(1).first,candidate.confidence>=0.2 else {return nil}
+            guard let candidate=observation.topCandidates(1).first,candidate.confidence >= (broadReading ? 0:0.2) else {return nil}
             let box=observation.boundingBox
             return OCRLine(text:candidate.string,confidence:Double(candidate.confidence),x:roi.x+box.minX*roi.width,y:roi.y+(1-box.maxY)*roi.height,width:box.width*roi.width,height:box.height*roi.height)
         }

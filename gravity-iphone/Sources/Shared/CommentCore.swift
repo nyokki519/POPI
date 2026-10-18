@@ -68,7 +68,7 @@ final class CommentDetector {
     }
 
     func ingest(_ lines: [OCRLine],now:Double=ProcessInfo.processInfo.systemUptime) -> [String] {
-        let sorted = lines.filter { $0.confidence >= (recallMode ? 0.2:0.55) }
+        let sorted = lines.filter { $0.confidence >= (recallMode ? 0:0.55) }
             .sorted { $0.y == $1.y ? $0.x<$1.x : $0.y<$1.y }
         // Keep OCR rows explicit: do not guess usernames or merge two comments.
         let screen = Array(sorted.map { String(normalizeComment($0.text).prefix(recallMode ? 2000:1000)) }

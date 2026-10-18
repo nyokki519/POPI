@@ -91,7 +91,7 @@ struct ChatLayoutAnalyzer {
         let keyboardRows=qwerty.count>=2 ? qwerty:(kana.count>=3 ? kana:[])
         let keyboardTop=Double(keyboardRows.compactMap{$0.first?.y}.min() ?? h)/height
         let valid=lines.filter {line in
-            line.confidence>=0.2 && line.x.isFinite && line.y.isFinite && line.width.isFinite && line.height.isFinite &&
+            line.confidence>=0 && line.x.isFinite && line.y.isFinite && line.width.isFinite && line.height.isFinite &&
             line.x>=0.015 && line.x<0.78 && line.y>=0.17 && line.width>0 && line.height>0 &&
             line.x+line.width<=1.01 && line.y+line.height<=min(0.90,keyboardTop) &&
             !normalizeComment(line.text).isEmpty
