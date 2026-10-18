@@ -1,7 +1,7 @@
 {
-  "version": "0.7",
-  "source_commit": "9b64dcb66f57285cd2b252a24b10e640682373bd",
-  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/39093921711",
+  "version": "0.8",
+  "source_commit": "f614a456704fa2cf7f0b954dc6177c98c0ba8103",
+  "apple_ci_url": "https://github.com/nyokki519/POPI/actions/runs/39095756846",
   "conclusion": "success",
   "steps": [
     {
@@ -51,9 +51,9 @@
   ],
   "tests": {
     "comment_and_queue": 51,
-    "legacy_layout_and_budget": 28,
-    "structural_classification": 26,
-    "native_Vision_checks": 58,
+    "legacy_layout_and_budget": 33,
+    "structural_classification": 32,
+    "native_Vision_checks": 77,
     "replay_frames": 24,
     "configuration_and_resigned_extension_discovery": "passed",
     "legacy_compiler": "Official Swift 5.7.2 Linux: common logic executed successfully. Full Xcode14.2 iOS build not run.",
@@ -65,18 +65,18 @@
     "compiled_AppIcon_and_Assets_car": "verified in downloaded device IPA"
   },
   "UI_smoke": {
-    "ci_url": "https://github.com/nyokki519/POPI/actions/runs/39093517434",
+    "ci_url": "https://github.com/nyokki519/POPI/actions/runs/39095262164",
     "device": "SE3 simulator",
     "result": "App process survived 12 seconds; re-foregrounded; screenshot visually confirmed actual floral app home.",
-    "preview": "preview-v0.7.jpg",
-    "sha256": "9236e5c5628d8490b72805bf24a39ebfb4096018f946653888fa6633ccb8a308",
-    "source_commit": "ce7fc41943c0d6e917f82f70a46165760d188623",
-    "note": "UI unchanged in final OCR-confidence-only revision; final native OCR and device builds checked separately."
+    "preview": "preview-v0.8.jpg",
+    "sha256": "757d0611f864b1cbde1d1e09ea8e5a1ce459d9b58821e533d1b7e626b74970df",
+    "source_commit": "70e7abe743c1250df39474d2bb70a126fd1bf3a9",
+    "note": "UI unchanged in final image/OCR priority revision; final native OCR and device binaries validated separately."
   },
   "windows_IPA": {
-    "bytes": 6675478,
-    "sha256": "69fced8c448f2bbae67dff7d023824189921c1c251d186dc3e099e22c30bed79",
-    "version": "0.7",
+    "bytes": 6684767,
+    "sha256": "5c9440ade557ce0a20db4299d532556b2ab52a209c519484666ae3b41b7aa619",
+    "version": "0.8",
     "arm64_app_and_upload": true,
     "icon_catalog": true,
     "signature": "unsigned; AltStore re-signing and Windows installation not tested"
@@ -88,26 +88,44 @@
     "All paid decorations, all devices, future iOS releases"
   ],
   "limitations": [
-    "Fixed top/bottom/right control margins can miss messages in unusual layouts",
-    "Announcements, usernames and entry notices are intentionally permitted",
-    "OCR misses and messages appearing between sampled frames remain possible",
-    "Exact-text suppression may skip identical wording after disjoint screen changes; OCR flicker and scrolling may replay text",
-    "Speech queue limits: 60 lines, 90 seconds, 2000 characters per line; busy rooms may lag or drop excess entries",
-    "Keyboard grid detection cannot cover every keyboard or prediction bar"
+    "Transparent or background-colored text without a detectable filled bubble can be missed",
+    "Announcements with the same filled-bubble geometry can remain",
+    "Three-second-or-longer sampling can miss transient comments and increases latency",
+    "ReplayKit screen capture overhead remains; real device load and GRAVITY responsiveness after this revision are untested",
+    "Speech queue remains bounded at 60 entries / 90 seconds / 2000 characters each",
+    "All themes, keyboard variants, devices and future OS versions are untested"
   ],
   "comparison": {
-    "working_audio_reference": "e38b897",
-    "preserved_audio_route": "AVAudioSession playback + mixWithOthers; main-queue AVSpeechSynthesizer",
-    "changed": "Broad region OCR without avatar/name/bubble gates; single-observation recall mode; reads initial and middle inserted rows; expanded speech queue; spoken broadcast startup cue",
-    "default_frame_processor": "broadReading=true for both live broadcast and photo diagnostics",
-    "legacy_strict_path": "37 native checks retained using broadReading=false; 21 new checks cover shipped broad default",
+    "user_observation": "User confirmed v0.7 speech works, but scope is too broad and GRAVITY is too slow to operate",
+    "preserved_audio_route": "Same playback + mixWithOthers session and main-queue AVSpeechSynthesizer; startup speech retained",
+    "changed": "192px filled-surface selection without avatar/name gates; OCR only union of surfaces; no-surface OCR skip; bubble-only fingerprint; lower OCR pixel budget; economy sampling; optimized Debug build",
+    "default_frame_processor": "lightweight=true for live broadcast and photo diagnostics",
+    "reference_paths": "37 strict + 21 v0.7 broad native checks retained; 19 new balanced checks",
     "failed_regressions_fixed": [
-      "Initial visible lines silent",
-      "Single-frame or disjoint unseen lines dropped",
-      "Missing avatar or name blocked text",
-      "Low OCR confidence dropped",
-      "Middle row appeared after anchors and was ignored",
-      "One-character-different message silently merged"
+      "Background names included",
+      "No filled surface still read text",
+      "Colored/gray avatarless body grouped incorrectly",
+      "Economy budget did not throttle scans"
     ]
+  },
+  "benchmark": {
+    "median_seconds": {
+      "v07_broad": 0.8993782916667215,
+      "v08_balanced": 0.639217583333334
+    },
+    "v07_over_v08_ratio": 1.4069986732478867,
+    "scope": "Same generated 750x1334 three-message room, five uncached samples after warmup, both optimized, same CI host; NOT real iPhone/GRAVITY performance"
+  },
+  "processing_limits": {
+    "thumbnail_long_edge": 192,
+    "OCR_max_pixels": 220000,
+    "OCR_max_long_edge": 1000,
+    "minimum_interval_seconds": 3,
+    "duration_multiplier": 10,
+    "maximum_interval_seconds": 30,
+    "hot_minimum_interval_seconds": 8,
+    "debug_and_release_optimization": "-O",
+    "CoreImage_priorityRequestLow": true,
+    "Vision_preferBackgroundProcessing": true
   }
 }
